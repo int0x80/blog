@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head prefix="og: http://ogp.me/ns# article: http://ogp.me/ns/article# website: http://ogp.me/ns/website#">
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+    <meta name="description" content="">
+    <meta property="og:title" content="Blog Notes">
+    
+    <meta property="og:type" content="article">
+    <meta property="article:published_time" content="2017-01-21">
+    
+    <meta property="og:description" content="">
+    <meta property="og:url" content="https://int0x80.github.io/blog/post/blog-notes/">
+    <meta property="og:site_name" content="int0x80">
+    
+    <meta property="og:tags" content="blog">
+    
+    <meta property="og:tags" content="git">
+    
+    <meta property="og:tags" content="github">
+    
+    <meta property="og:tags" content="hugo">
+    
+    <meta name="generator" content="Hugo 0.18.1" />
+    <title>Blog Notes &middot; int0x80</title>
+    
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.9.0/styles/ocean.min.css">
+    
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.3.0/css/font-awesome.min.css">
+    
+    <link rel="stylesheet" href="https://int0x80.github.io/blog/css/style.css">
+    
+    <link href="" rel="alternate" type="application/rss+xml" title="int0x80" />
+    
+    
+    <link rel="icon" href="https://int0x80.github.io/blog/favicon.ico" />
+    
+
+    
+    
+</head>
+<body>
+<nav class="navbar navbar-default navbar-fixed-top visible-xs">
+	<div class="container-fluid">
+		<div class="navbar-header">
+			<button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+				<span class="sr-only">Toggle navigation</span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+			</button>
+			
+				<a class="navbar-brand" href="https://int0x80.github.io/blog/">int0x80</a>
+			
+		</div>
+		<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+			<ul class="nav navbar-nav">
+				
+				
+					<li><a href="https://int0x80.github.io/blog/about">About</a></li>
+				
+					<li><a href="https://int0x80.github.io/blog/">Blog</a></li>
+				
+			</ul>
+		</div>
+	</div>
+</nav>
+<div class="container-fluid">
+	<div class="row">
+		<div id="menu" class="hidden-xs col-sm-4 col-md-3">
+	<div id="menu-content" class="vertical-align">
+		
+			<h1 class="text-center"><a href="https://int0x80.github.io/blog/">int0x80</a></h1>
+		
+		
+		
+			<small class="text-center center-block">Hack All The Things</small>
+		
+		
+		
+			<img id="profile-pic" src="https://int0x80.github.io/blog//img/int0x80.jpg" alt="My Picture" class="img-circle center-block">
+		
+		<div id="social" class="text-center">
+			<a href="https://twitter.com/int0x80"><i class="fa fa-twitter fa-2x"></i></a>
+			
+			<a href="https://github.com/int0x80"><i class="fa fa-github fa-2x"></i></a>
+			<a href="mailto:eighty@int0x80.com"><i class="fa fa-envelope-o fa-2x"></i></a>
+		</div>
+		<div id="links" class="text-center">
+			
+			
+				<a href="https://int0x80.github.io/blog/about">About</a>
+			
+				<a href="https://int0x80.github.io/blog/">Blog</a>
+			
+		</div>
+	</div>
+</div>
+		<div id="content" class="col-xs-12 col-sm-8 col-md-9">
+			<div class="row">
+				<div id="post" class="col-sm-offset-1 col-sm-10 col-md-10 col-lg-8">
+
+<main>
+	<header>
+		<h1>Blog Notes</h1>
+	</header>
+
+	<article>
+		<p>Hello, World.  Figured it was apropos to start the blog with some notes on how the blog was built.  Read on for details of standing up a Hugo blog on GitHub Pages.</p>
+
+<h1 id="install">Install</h1>
+
+<p>The blog is written and published from an <a href="https://github.com/int0x80/ctf-vm">Ubuntu VM</a>.  A build of hugo is already pre-packaged and available in apt, but unfortunately ships with some bugs.  Fear not, installing the <a href="https://github.com/spf13/hugo/releases/latest">latest release</a> is simple.</p>
+
+<pre><code>$ wget https://github.com/spf13/hugo/releases/download/v0.18.1/hugo_0.18.1-64bit.deb
+$ sudo dpkg -i ./hugo_0.18.1-64bit.deb
+</code></pre>
+
+<p>A quick version check confirms the install.</p>
+
+<pre><code>$ hugo version 
+Hugo Static Site Generator v0.18.1 BuildDate: 2016-12-30T04:05:34-06:00
+</code></pre>
+
+<h1 id="new-site-new-post">New Site, New Post</h1>
+
+<p>Getting the blog off the ground takes only a moment.  First create a site, then a post.</p>
+
+<pre><code>$ hugo new site blog
+$ cd !$ 
+$ hugo new post/blog-notes.md
+</code></pre>
+
+<p>Posts are written in markdown so editing is quick, simple, and can be accomplished with your editor of choice.</p>
+
+<h1 id="what-s-important">What&rsquo;s Important</h1>
+
+<p>Aside from publishing via static page generator, I also had a few demands.  Syntax highlighting should look nice, and be easily integrated.  For example, I prefer markdown&rsquo;s wrapping as opposed to MediaWiki&rsquo;s GeSHi <code>&lt;syntaxhighlight ...&gt;</code> delimeters.  Next, a presentable theme that can easily be wired up.  And lastly, customized summaries to keep the listing pages tidy.</p>
+
+<h2 id="syntax-highlighting">Syntax Highlighting</h2>
+
+<p>Hugo uses <a href="http://pygments.org/">Pygments</a> for syntax highlighting.  A client-side highlighter, like <a href="https://highlightjs.org/">highlight.js</a> can easily be incorporated.  I opted for the latter based on the availability of languages and styles.  Lexers and styles are easily incorporated in the header of each post.</p>
+
+<pre><code>scripts = [
+  &quot;//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.9.0/highlight.min.js&quot;,
+]
+
+css = [
+  &quot;//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.9.0/styles/ocean.min.css&quot;,
+]
+</code></pre>
+
+<h2 id="theme">Theme</h2>
+
+<p>As with any modern blogging app, Hugo facilitates <a href="http://themes.gohugo.io/">themes</a>.  I went with <a href="http://themes.gohugo.io/hugo-geo/">Hugo Geo</a> and pretty much copied the stylesheet from author&rsquo;s site.</p>
+
+<pre><code>$ cd themes/
+$ git clone https://github.com/alexurquhart/hugo-geo
+</code></pre>
+
+<p>Then configure the <code>config.toml</code> file in the main directory.</p>
+
+<pre><code>baseURL = &quot;https://int0x80.github.io/blog/&quot;
+languageCode = &quot;en-us&quot;
+title = &quot;Hack All The Things&quot;
+disqusShortname = &quot;xcdx80&quot;
+paginate = 5
+
+
+[taxonomies]
+  tag = &quot;tags&quot;
+  category = &quot;categories&quot;
+  series = &quot;series&quot;
+
+[params]
+  showglobe = false
+  highlight = true
+
+  favicon = &quot;favicon.ico&quot;
+
+  github = &quot;https://github.com/int0x80&quot;
+  twitter = &quot;https://twitter.com/int0x80&quot;
+  
+  profilepic = &quot;img/int0x80.jpg&quot;
+  
+  title = &quot;int0x80&quot;
+  subtitle = &quot;Hack All The Things&quot;
+  
+  [[params.navlinks]]
+  name = &quot;About&quot;
+  url = &quot;about&quot;
+  
+  [[params.navlinks]]
+  name = &quot;Blog&quot;
+  url = &quot;&quot;
+</code></pre>
+
+<h2 id="summary-length">Summary Length</h2>
+
+<p>The default length for a post&rsquo;s summary is 70 words.  Meaning Hugo displays the first 70 words of a post, followed by a &ldquo;Read More&rdquo; link to the full post.  This can be modified by inserting <code>&lt;!--more--&gt;</code> into the post content to delimit the summary.  As an example, the beginning content of this post is as follows.</p>
+
+<pre><code>Hello, World.  Figured it was apropos to start the blog with some notes on how the blog was built.  Read on for details of standing up a Hugo blog on GitHub Pages.&lt;!--more--&gt;
+
+# Install
+
+The blog is written and published from an [Ubuntu VM](https://github.com/int0x80/ctf-vm).  Fortunately a build of hugo is already pre-packaged and available in apt.
+</code></pre>
+
+<h1 id="github-pages">GitHub Pages</h1>
+
+<p>The last steps are to do some git wrangling to push the site up to GitHub.  The <code>baseURL</code> parameter has already been situated in the config so let&rsquo;s generate the site content with hugo.</p>
+
+<pre><code>$ hugo --theme=hugo-geo
+</code></pre>
+
+<p>This creates the <code>public/</code> directory which will be pushed up to GitHub.  Now to set up version control.</p>
+
+<pre><code>$ git init
+$ echo &quot;/public/&quot; &gt;&gt; .gitignore
+$ echo &quot;/themes/&quot; &gt;&gt; .gitignore
+$ git add --all
+$ git commit -m &quot;Initial commit&quot;
+</code></pre>
+
+<p>Next, create an empty repository named <code>blog</code> on GitHub; and add it as remote.</p>
+
+<pre><code>$ cd public
+$ git init
+$ git remote add origin git@github.com:int0x80/blog.git
+</code></pre>
+
+<p>Then create a branch and push it up.  Remember, we&rsquo;re still under <code>public/</code>.</p>
+
+<pre><code>$ git checkout -b gh-pages
+$ git add --all
+$ git commit -m &quot;blog added&quot;
+$ git push -f origin gh-pages
+</code></pre>
+
+<p>Mostly painless, overall.  I look forward to sharing my notes with the internet.</p>
+	</article>
+</main>
+
+<div id="bottom-nav" class="text-center center-block">
+	<a href=" https://int0x80.github.io/blog/" class="btn btn-default"><i class="fa fa-home"></i> Home</a>
+</div>
+
+
+  <div id="disqus_thread"></div>
+<script type="text/javascript">
+    var disqus_shortname = 'disqus0x80';
+    var disqus_identifier = 'https:\/\/int0x80.github.io\/blog\/post\/blog-notes\/';
+    var disqus_title = 'Blog Notes';
+    var disqus_url = 'https:\/\/int0x80.github.io\/blog\/post\/blog-notes\/';
+
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+  </div>
+  
+  <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.2/js/bootstrap.min.js"></script>
+  
+  
+  <script src="https://int0x80.github.io/blog//js/App.js"></script>
+  
+  <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.9.0/highlight.min.js"></script>
+  
+</body>
+</html>

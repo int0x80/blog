@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Hugo on int0x80</title>
+    <link>https://int0x80.github.io/blog/tags/hugo/index.xml</link>
+    <description>Recent content in Hugo on int0x80</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <atom:link href="https://int0x80.github.io/blog/tags/hugo/index.xml" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Blog Notes</title>
+      <link>https://int0x80.github.io/blog/post/blog-notes/</link>
+      <pubDate>Sat, 21 Jan 2017 08:50:47 -0600</pubDate>
+      
+      <guid>https://int0x80.github.io/blog/post/blog-notes/</guid>
+      <description>&lt;p&gt;Hello, World.  Figured it was apropos to start the blog with some notes on how the blog was built.  Read on for details of standing up a Hugo blog on GitHub Pages.&lt;/p&gt;
+
+&lt;h1 id=&#34;install&#34;&gt;Install&lt;/h1&gt;
+
+&lt;p&gt;The blog is written and published from an &lt;a href=&#34;https://github.com/int0x80/ctf-vm&#34;&gt;Ubuntu VM&lt;/a&gt;.  A build of hugo is already pre-packaged and available in apt, but unfortunately ships with some bugs.  Fear not, installing the &lt;a href=&#34;https://github.com/spf13/hugo/releases/latest&#34;&gt;latest release&lt;/a&gt; is simple.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ wget https://github.com/spf13/hugo/releases/download/v0.18.1/hugo_0.18.1-64bit.deb
+$ sudo dpkg -i ./hugo_0.18.1-64bit.deb
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;A quick version check confirms the install.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ hugo version 
+Hugo Static Site Generator v0.18.1 BuildDate: 2016-12-30T04:05:34-06:00
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h1 id=&#34;new-site-new-post&#34;&gt;New Site, New Post&lt;/h1&gt;
+
+&lt;p&gt;Getting the blog off the ground takes only a moment.  First create a site, then a post.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ hugo new site blog
+$ cd !$ 
+$ hugo new post/blog-notes.md
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Posts are written in markdown so editing is quick, simple, and can be accomplished with your editor of choice.&lt;/p&gt;
+
+&lt;h1 id=&#34;what-s-important&#34;&gt;What&amp;rsquo;s Important&lt;/h1&gt;
+
+&lt;p&gt;Aside from publishing via static page generator, I also had a few demands.  Syntax highlighting should look nice, and be easily integrated.  For example, I prefer markdown&amp;rsquo;s wrapping as opposed to MediaWiki&amp;rsquo;s GeSHi &lt;code&gt;&amp;lt;syntaxhighlight ...&amp;gt;&lt;/code&gt; delimeters.  Next, a presentable theme that can easily be wired up.  And lastly, customized summaries to keep the listing pages tidy.&lt;/p&gt;
+
+&lt;h2 id=&#34;syntax-highlighting&#34;&gt;Syntax Highlighting&lt;/h2&gt;
+
+&lt;p&gt;Hugo uses &lt;a href=&#34;http://pygments.org/&#34;&gt;Pygments&lt;/a&gt; for syntax highlighting.  A client-side highlighter, like &lt;a href=&#34;https://highlightjs.org/&#34;&gt;highlight.js&lt;/a&gt; can easily be incorporated.  I opted for the latter based on the availability of languages and styles.  Lexers and styles are easily incorporated in the header of each post.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;scripts = [
+  &amp;quot;//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.9.0/highlight.min.js&amp;quot;,
+]
+
+css = [
+  &amp;quot;//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.9.0/styles/ocean.min.css&amp;quot;,
+]
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;theme&#34;&gt;Theme&lt;/h2&gt;
+
+&lt;p&gt;As with any modern blogging app, Hugo facilitates &lt;a href=&#34;http://themes.gohugo.io/&#34;&gt;themes&lt;/a&gt;.  I went with &lt;a href=&#34;http://themes.gohugo.io/hugo-geo/&#34;&gt;Hugo Geo&lt;/a&gt; and pretty much copied the stylesheet from author&amp;rsquo;s site.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ cd themes/
+$ git clone https://github.com/alexurquhart/hugo-geo
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Then configure the &lt;code&gt;config.toml&lt;/code&gt; file in the main directory.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;baseURL = &amp;quot;https://int0x80.github.io/blog/&amp;quot;
+languageCode = &amp;quot;en-us&amp;quot;
+title = &amp;quot;Hack All The Things&amp;quot;
+disqusShortname = &amp;quot;xcdx80&amp;quot;
+paginate = 5
+
+
+[taxonomies]
+  tag = &amp;quot;tags&amp;quot;
+  category = &amp;quot;categories&amp;quot;
+  series = &amp;quot;series&amp;quot;
+
+[params]
+  showglobe = false
+  highlight = true
+
+  favicon = &amp;quot;favicon.ico&amp;quot;
+
+  github = &amp;quot;https://github.com/int0x80&amp;quot;
+  twitter = &amp;quot;https://twitter.com/int0x80&amp;quot;
+  
+  profilepic = &amp;quot;img/int0x80.jpg&amp;quot;
+  
+  title = &amp;quot;int0x80&amp;quot;
+  subtitle = &amp;quot;Hack All The Things&amp;quot;
+  
+  [[params.navlinks]]
+  name = &amp;quot;About&amp;quot;
+  url = &amp;quot;about&amp;quot;
+  
+  [[params.navlinks]]
+  name = &amp;quot;Blog&amp;quot;
+  url = &amp;quot;&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;summary-length&#34;&gt;Summary Length&lt;/h2&gt;
+
+&lt;p&gt;The default length for a post&amp;rsquo;s summary is 70 words.  Meaning Hugo displays the first 70 words of a post, followed by a &amp;ldquo;Read More&amp;rdquo; link to the full post.  This can be modified by inserting &lt;code&gt;&amp;lt;!--more--&amp;gt;&lt;/code&gt; into the post content to delimit the summary.  As an example, the beginning content of this post is as follows.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;Hello, World.  Figured it was apropos to start the blog with some notes on how the blog was built.  Read on for details of standing up a Hugo blog on GitHub Pages.&amp;lt;!--more--&amp;gt;
+
+# Install
+
+The blog is written and published from an [Ubuntu VM](https://github.com/int0x80/ctf-vm).  Fortunately a build of hugo is already pre-packaged and available in apt.
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h1 id=&#34;github-pages&#34;&gt;GitHub Pages&lt;/h1&gt;
+
+&lt;p&gt;The last steps are to do some git wrangling to push the site up to GitHub.  The &lt;code&gt;baseURL&lt;/code&gt; parameter has already been situated in the config so let&amp;rsquo;s generate the site content with hugo.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ hugo --theme=hugo-geo
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This creates the &lt;code&gt;public/&lt;/code&gt; directory which will be pushed up to GitHub.  Now to set up version control.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ git init
+$ echo &amp;quot;/public/&amp;quot; &amp;gt;&amp;gt; .gitignore
+$ echo &amp;quot;/themes/&amp;quot; &amp;gt;&amp;gt; .gitignore
+$ git add --all
+$ git commit -m &amp;quot;Initial commit&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Next, create an empty repository named &lt;code&gt;blog&lt;/code&gt; on GitHub; and add it as remote.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ cd public
+$ git init
+$ git remote add origin git@github.com:int0x80/blog.git
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Then create a branch and push it up.  Remember, we&amp;rsquo;re still under &lt;code&gt;public/&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ git checkout -b gh-pages
+$ git add --all
+$ git commit -m &amp;quot;blog added&amp;quot;
+$ git push -f origin gh-pages
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Mostly painless, overall.  I look forward to sharing my notes with the internet.&lt;/p&gt;</description>
+    </item>
+    
+  </channel>
+</rss>
