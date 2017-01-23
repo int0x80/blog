@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Linux on int0x80</title>
+    <link>https://int0x80.github.io/blog/tags/linux/index.xml</link>
+    <description>Recent content in Linux on int0x80</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <atom:link href="https://int0x80.github.io/blog/tags/linux/index.xml" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Home Lab Overview</title>
+      <link>https://int0x80.github.io/blog/post/home-lab-overview/</link>
+      <pubDate>Mon, 23 Jan 2017 16:05:31 -0600</pubDate>
+      
+      <guid>https://int0x80.github.io/blog/post/home-lab-overview/</guid>
+      <description>&lt;p&gt;Your home lab is a crucial platform for learning and advancing your skills.  From the comfort and privacy of your own home; you can spin up VMs, build infrastructure, break targets, repeatedly fail, and eventually succeed.  This post is the first in a three-part series covering my lab at home.  &lt;/p&gt;
+
+&lt;h1 id=&#34;series-structure&#34;&gt;Series Structure&lt;/h1&gt;
+
+&lt;p&gt;In this first post, I&amp;rsquo;ll give an overview of the lab and highlight some of the more noteworthy aspects.  In the second post, I&amp;rsquo;ll talk about the build and configuration of my SAN, which stores and serves up all of the VMs.  Finally, we&amp;rsquo;ll walk through the setup of my &lt;a href=&#34;https://www.vmware.com/products/vsphere-hypervisor.html&#34;&gt;ESXi&lt;/a&gt; node, which manages and controls the VMs.&lt;/p&gt;
+
+&lt;h1 id=&#34;humble-beginnings&#34;&gt;Humble Beginnings&lt;/h1&gt;
+
+&lt;p&gt;I want to take a step back to discuss the early days of my lab.  Prepare for one of those &amp;ldquo;back in my day&amp;rdquo; flashbacks, or skip to the next section to avoid it.&lt;/p&gt;
+
+&lt;p&gt;Before virtualization, I used to hoard old hardware that was free.  Money was scarce and electricity was cheap/free.  I volunteered at several local organizations that accepted systems donated from local businesses, then filled orders for non-profit organizations who needed computers.  Occasionally the bottom-tier of inventory would need be cleared out to make room for more modern donations, and occasionally I would be able to take one of these bottom-tier systems home with me.  We&amp;rsquo;re talking about taking home a Pentium II in the days of Pentium 4 HT.  I also once landed a Sun SPARCstation!  These things ran Linux and BSD just fine, but had no virtualization support.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://cloud.githubusercontent.com/assets/1061032/22214449/768375b6-e14c-11e6-90e7-f2efc9b4e2d7.jpg&#34; alt=&#34;Sun SPARCstation, photo from kiwigeek.com&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Most consumer desktop/laptop CPUs now provide virtualization via AMD-V or Intel VT.  In the event you&amp;rsquo;re operating from hardware without virtualization support, you can acquire inexpensive devices like the Raspberry Pi or one of the many available alternatives to use as targets.  Of course, volunteering and dumpster diving are still viable options, as well.&lt;/p&gt;
+
+&lt;p&gt;I was hooked on virtualization once capable hardware was available to me.  Nothing large scale, as my VMs were running from a single consumer-grade system, but I could at least spin up multiple systems to do things like malware analysis or isolated browsing with snapshosts.  Snapshots are a critical feature since re-imaging a system can take many minutes to hours, while it takes less than one second to revert a snapshot and restore system state.  Bonus for also not needing extra keyboards, mice, monitors, etc. since all VMs are accessible from your host system instead of being individual towers or laptops.&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;tl;dr:&lt;/em&gt; &lt;strong&gt;Opt for virtualization if possible, but inexpensive/free hardware can also be effective.&lt;/strong&gt;&lt;/p&gt;
+
+&lt;h1 id=&#34;current-state&#34;&gt;Current State&lt;/h1&gt;
+
+&lt;p&gt;My home lab currently consists of two physical systems:  a SAN, and an ESXi node.  The configuration of each system will be covered in subsequent posts; but I&amp;rsquo;ll take this opportunity to #humblebrag on some of the stats.  The SAN exposes ~22TB of storage via 10Gbps link, while the ESXi node has two Xeon CPUs with 12 cores and 96GB of RAM.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://cloud.githubusercontent.com/assets/1061032/22214656/480d9760-e14d-11e6-855e-943be3e779f5.png&#34; alt=&#34;ESXi stats humblebrag&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Projects are separated into individual virtual networks.  For example, my VMs for firmware reversing are on one network while VMs from &lt;a href=&#34;https://www.vulnhub.com/&#34;&gt;VulnHub&lt;/a&gt; are on another network.  Each network is managed by a virtual switch and a clone of a simple router VM that I built using Debian, dnsmasq, and iptables.  Larger projects with multiple network segments use multiple switches and router VMs.&lt;/p&gt;
+
+&lt;h1 id=&#34;wrapping-up&#34;&gt;Wrapping Up&lt;/h1&gt;
+
+&lt;p&gt;Instantly spinning up new VMs and networks allows me to focus on the goals of a project, rather than being distracted by infrastructure tasks.  Likewise, instantly tearing down or reverting VMs curbs inhibition of a serious mistake wiping out hours or days of work.  A robust lab abstracts away many of the management items thus reducing overhead and facilitating efficiency in starting and completing new projects.&lt;/p&gt;
+
+&lt;p&gt;In the next part, we&amp;rsquo;ll cover the build and configuration of the SAN, which was quite a fun learning experience.&lt;/p&gt;</description>
+    </item>
+    
+  </channel>
+</rss>
