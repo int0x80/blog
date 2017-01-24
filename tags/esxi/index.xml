@@ -9,6 +9,187 @@
     <atom:link href="https://int0x80.github.io/blog/tags/esxi/index.xml" rel="self" type="application/rss+xml" />
     
     <item>
+      <title>Home Lab: SAN</title>
+      <link>https://int0x80.github.io/blog/post/home-lab-san/</link>
+      <pubDate>Tue, 24 Jan 2017 12:45:19 -0600</pubDate>
+      
+      <guid>https://int0x80.github.io/blog/post/home-lab-san/</guid>
+      <description>&lt;p&gt;This post is the second in a three-part series covering my lab at home (&lt;a href=&#34;https://int0x80.github.io/blog/post/home-lab-overview/&#34;&gt;Part 1&lt;/a&gt;).  The SAN runs Ubuntu Server 16.04 and exposes ~22TB of storage via 10Gbps link.  The ESXi node then utilizes that storage via iSCSI.&lt;/p&gt;
+
+&lt;p&gt;This build had a lot of first-time experiences for me.  My first SAN, my first hardware RAID, and my first exposure to iSCSI.  Some limitations of the build are already visible, along with some ways I could have saved money, but I am pretty happy with the current setup and will address growing pains as they arrive.&lt;/p&gt;
+
+&lt;h1 id=&#34;hardware&#34;&gt;Hardware&lt;/h1&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;http://www.ebay.com/itm/252519213489&#34;&gt;ASRock 970 Extreme3 R1.01 Socket AM3+ Motherboard&lt;/a&gt;: $44.99&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.amazon.com/dp/B0071RSMKA&#34;&gt;CPU Fan Bracket Base for AM3 socket&lt;/a&gt;: $5.49&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://www.ebay.com/itm/222305768852&#34;&gt;16GB PC3-14900E DDR3 ECC RAM&lt;/a&gt;: $100.00&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://www.ebay.com/itm/350983607686&#34;&gt;MELLANOX CONNECTX-2 PCIe 10Gbps ETHERNET NIC&lt;/a&gt; (2x): $34.60&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://www.fs.com/products/21269.html&#34;&gt;10G SFP+ Passive Direct Attach Copper Twinax Cable 30AWG&lt;/a&gt;: $9.50&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://www.areca.com.tw/products/1880.htm&#34;&gt;Areca ARC-1880i&lt;/a&gt;: $149.95&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.amazon.com/dp/B005E2XTO8&#34;&gt;Mini SAS to SATA Breakout Cable&lt;/a&gt; (2x): $36.52&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.amazon.com/dp/B01HXYRJYK&#34;&gt;Seasonic 650W 80 PLUS Titanium PSU&lt;/a&gt;: $173.19&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.amazon.com/dp/B0091IZ1ZG&#34;&gt;Rosewill 4U Server Chassis (RSV-L4500)&lt;/a&gt;: $104.99&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.newegg.com/Product/Product.aspx?Item=N82E16820178966&#34;&gt;PNY CS1311 2.5&amp;rdquo; 120GB SSD&lt;/a&gt;: $49.99&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://www.amazon.com/dp/B0143BOR5A&#34;&gt;WD Red 6TB Pro&lt;/a&gt; (6x): $1782.92&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;strong&gt;Total:&lt;/strong&gt; $2492.14&lt;/p&gt;
+
+&lt;p&gt;Management of the system is done via SSH through the onboard NIC, while storage is exposed via iSCSI using the 10Gbps NIC.&lt;/p&gt;
+
+&lt;p&gt;Some of the hardware components might seem like odd selections or at least a bit outdated.  Since this was my first build and I just wanted to get something up and running with minimal headaches, I based my build off of &lt;a href=&#34;https://thehomeserverblog.com/esxi-storage/building-a-homemade-san-on-the-cheap-32tb-for-1500/&#34;&gt;this whitebox build&lt;/a&gt; I found.  Everything runs fine so no real regrets thus far.  Let&amp;rsquo;s look more at the configuration and setup.&lt;/p&gt;
+
+&lt;h1 id=&#34;areca-arc-1880i&#34;&gt;Areca ARC-1880i&lt;/h1&gt;
+
+&lt;p&gt;The main step in setting up the storage was initializing the RAID with the correct parameters.  With 6 drives at 6TB each, I went with a RAID6 to expose ~22TB of storage.  I wanted to use 4k blocks but ran into some issues on ESXi, so the only option was to use the 64-bit LBA blocks for the RAID.  I selected a stripe size of 64k and waited ~9 hours for the RAID to initialize.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Note:&lt;/strong&gt; If you want to do any quick tests with a RAID, simply build a RAID0 and it will be ready immediately.&lt;/p&gt;
+
+&lt;h1 id=&#34;video-card&#34;&gt;Video Card&lt;/h1&gt;
+
+&lt;p&gt;One of the limitations I encountered early was that the system wanted a video card to boot.  Most cards are PCI-e now, but the PCI-e slots on the board were taken by the 10Gbps NIC and the RAID card.  Fortunately, &lt;a href=&#34;https://twitter.com/indiecom&#34;&gt;jgor&lt;/a&gt; gave me an old PCI video card that he had.  There was some tom-foolery with getting the UEFI screen to display initially, but eventually things started working.  Keep this in mind if you decide to mirror my build.&lt;/p&gt;
+
+&lt;h1 id=&#34;10gbps-twinax-cable&#34;&gt;10Gbps Twinax Cable&lt;/h1&gt;
+
+&lt;p&gt;The 10Gbps cable linked above is about 18&amp;rdquo; in length.  This means the connected 10Gbps NICs need to be in very close proximity.  It shouldn&amp;rsquo;t be an issue for systems racked adjacent to each other, but in any other case you might consider a longer cable.&lt;/p&gt;
+
+&lt;h1 id=&#34;iscsi&#34;&gt;iSCSI&lt;/h1&gt;
+
+&lt;p&gt;After situating the hardware, I installed Ubuntu Server to the SSD.  Initially, I went with 16.10 as it was the most recent release, but encountered some issues and downgraded to 16.04.&lt;/p&gt;
+
+&lt;p&gt;Installing the necessary packages was simple.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ sudo apt update &amp;amp;&amp;amp; sudo apt dist-upgrade -y
+$ sudo apt install -y iscsitarget iscsitarget-dkms
+$ sudo sed -i -e &amp;quot;s/ISCSITARGET_ENABLE=false/ISCSITARGET_ENABLE=true/&amp;quot; /etc/default/iscsitarget
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The last steps are to manually add the LUN, which is essentially a label applied to the storage interface.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ sudo ietadm --op new --tid=3 --params Name=iqn.2014-11.home.lab.san:storage03  
+$ sudo ietadm --op new --tid=3 --lun=0 --params Path=/dev/sda1,Type=blockio  
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;We&amp;rsquo;ll cover the ESXi side of things in the next post, but the iSCSI adapter should now see the target storage available.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://cloud.githubusercontent.com/assets/1061032/22211254/5b317232-e141-11e6-9e1b-e0d8fc2aa3e4.png&#34; alt=&#34;ESXi iSCSI adapter&#34; /&gt;&lt;/p&gt;
+
+&lt;h2 id=&#34;further-testing&#34;&gt;Further Testing&lt;/h2&gt;
+
+&lt;p&gt;If you want to do some quick tests, or just mess around with iSCSI some more, there are some simple processes you can explore.  Some quick notes:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;ESXi 10Gbps NIC: &lt;code&gt;10.11.1.2&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;SAN 10Gbps NIC: &lt;code&gt;10.11.1.1&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;SAN Management NIC: &lt;code&gt;192.168.1.5&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&#34;verify-the-iscsi-service-is-listening-and-reachable&#34;&gt;Verify the iSCSI service is listening and reachable&lt;/h3&gt;
+
+&lt;pre&gt;&lt;code&gt;# from the ESXi node
+[root@esxi:~] nc -z -s 10.11.1.2 10.11.1.1 3260  
+Connection to 10.11.1.1 3260 port [tcp/*] succeeded!
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;add-a-small-iscsi-target-on-the-san&#34;&gt;Add a small iSCSI target on the SAN&lt;/h3&gt;
+
+&lt;pre&gt;&lt;code&gt;# on the SAN, 192.168.1.5
+$ sudo dd if=/dev/zero of=/tmp/fileio.img bs=1 count=0 seek=2G  
+$ ls -lh /tmp/fileio.img  
+-rw-r--r-- 1 root root 2.0G Jan  3 11:45 /tmp/fileio.img  
+  
+$ sudo grep -v &amp;quot;^\s*#&amp;quot; /etc/iet/ietd.conf | grep -v &amp;quot;^$&amp;quot;  
+Target iqn.2014-11.home.lab.san:storage01  
+  Lun 0 Path=/tmp/fileio.img,Type=fileio  
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;look-for-targets-via-the-management-interface&#34;&gt;Look for targets via the management interface&lt;/h3&gt;
+
+&lt;pre&gt;&lt;code&gt;# from a test system, 192.168.1.134
+$ sudo iscsiadm -m discovery -t st -p 192.168.1.5  
+192.168.1.5:3260,1 iqn.2014-11.home.lab.san:storage01  
+10.11.1.1:3260,1 iqn.2014-11.home.lab.san:storage01  
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;login-from-the-management-interface&#34;&gt;Login from the management interface&lt;/h3&gt;
+
+&lt;pre&gt;&lt;code&gt;# from a test system, 192.168.1.134
+$ sudo iscsiadm -m node --login  
+Logging in to [iface: default, target: iqn.2014-11.home.lab.san:storage01, portal: 10.11.1.1,3260] (multiple)  
+Logging in to [iface: default, target: iqn.2014-11.home.lab.san:storage01, portal: 192.168.1.5,3260] (multiple)  
+iscsiadm: Could not login to [iface: default, target: iqn.2014-11.home.lab.san:storage01, portal: 10.11.1.1,3260].  
+iscsiadm: initiator reported error (8 - connection timed out)  
+Login to [iface: default, target: iqn.2014-11.home.lab.san:storage01, portal: 192.168.1.5,3260] successful.  
+iscsiadm: Could not log into all portals  
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Makes sense that the target on &lt;code&gt;10.11.1.1&lt;/code&gt; is unavailable as there&amp;rsquo;s no route to that interface from the management network.  The target on the management interface (&lt;code&gt;192.168.1.5&lt;/code&gt;) is successful.&lt;/p&gt;
+
+&lt;h3 id=&#34;examine-iscsi-sessions-on-the-san&#34;&gt;Examine iSCSI sessions on the SAN&lt;/h3&gt;
+
+&lt;pre&gt;&lt;code&gt;$ sudo cat /proc/net/iet/session  
+tid:2 name:iqn.2014-11.home.lab.san:storage01  
+        sid:1688849964925440 initiator:iqn.1993-08.org.debian:01:399510298987  
+                cid:0 ip:192.168.1.134 state:active hd:none dd:none  
+        sid:564049469047296 initiator:iqn.1998-01.com.vmware:esxi-56ec2846  
+                cid:0 ip:10.11.1.2 state:active hd:none dd:none  
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;logout-from-your-test-session&#34;&gt;Logout from your test session&lt;/h3&gt;
+
+&lt;pre&gt;&lt;code&gt;# from a test system, 192.168.1.134
+$ sudo iscsiadm -m node -U all  
+Logging out of session [sid: 4, target: iqn.2014-11.home.lab.san:storage01, portal: 192.168.1.5,3260]  
+Logout of [sid: 4, target: iqn.2014-11.home.lab.san:storage01, portal: 192.168.1.5,3260] successful.
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;logs-ftw&#34;&gt;Logs, ftw!&lt;/h3&gt;
+
+&lt;p&gt;All of your iSCSI interactions should show up under &lt;code&gt;/var/log/syslog&lt;/code&gt;.  This can also be utilized when troubleshooting configuration issues.&lt;/p&gt;
+
+&lt;h1 id=&#34;nic-name-assignment&#34;&gt;NIC Name Assignment&lt;/h1&gt;
+
+&lt;p&gt;Another issue encountered during the initial tests of the build was that the NIC would be assigned a different name based on the hardware present in the system.  Before adding the PCI video card, I&amp;rsquo;d removed the 10Gbps NIC and used a PCI-e video card to configure the UEFI.&lt;/p&gt;
+
+&lt;p&gt;This was the hardware configuration at the time of the OS install which caused the onboard NIC, used for management, to be named &lt;code&gt;enp6s0&lt;/code&gt;.  When the PCI-e video card was replaced with the 10Gbps NIC, I quickly learned that the onboard NIC was renamed to &lt;code&gt;enp7s0&lt;/code&gt; &amp;ndash; for which no entry existed in &lt;code&gt;/etc/network/interfaces&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;This is due to systemd&amp;rsquo;s approach to naming nomenclature; about which you can find more information in &lt;a href=&#34;https://askubuntu.com/a/689143&#34;&gt;this AskUbuntu post&lt;/a&gt;.  You can address this by adding &lt;a href=&#34;https://askubuntu.com/a/785442&#34;&gt;udev rules&lt;/a&gt;, but I opted for an entry to my &lt;code&gt;interfaces&lt;/code&gt; file:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ cat /etc/network/interfaces
+# This file describes the network interfaces available on your system
+# and how to activate them. For more information, see interfaces(5).
+
+source /etc/network/interfaces.d/*
+
+# The loopback network interface
+auto lo
+iface lo inet loopback
+
+# The primary network interface
+auto enp7s0
+iface enp7s0 inet dhcp
+
+# The primary network interface when 10Gbps nic is not in
+auto enp6s0
+iface enp6s0 inet dhcp
+
+# 10Gbps nic
+auto enp1s0
+iface enp1s0 inet static
+  address 10.11.1.1
+  # gateway 10.11.1.1
+  netmask 255.255.255.0
+  network 10.11.1.0
+  broadcast 10.11.1.255
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h1 id=&#34;wrapping-up&#34;&gt;Wrapping Up&lt;/h1&gt;
+
+&lt;p&gt;That completes the build of the SAN.  We will tie everything together from ESXi in the third/final post of the series.&lt;/p&gt;</description>
+    </item>
+    
+    <item>
       <title>Home Lab Overview</title>
       <link>https://int0x80.github.io/blog/post/home-lab-overview/</link>
       <pubDate>Mon, 23 Jan 2017 16:05:31 -0600</pubDate>

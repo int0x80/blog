@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head prefix="og: http://ogp.me/ns# article: http://ogp.me/ns/article# website: http://ogp.me/ns/website#">
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+    <meta name="description" content="">
+    <meta property="og:title" content="Home Lab: SAN">
+    
+    <meta property="og:type" content="article">
+    <meta property="article:published_time" content="2017-01-24">
+    
+    <meta property="og:description" content="">
+    <meta property="og:url" content="https://int0x80.github.io/blog/post/home-lab-san/">
+    <meta property="og:site_name" content="int0x80">
+    
+    <meta property="og:tags" content="esxi">
+    
+    <meta property="og:tags" content="lab">
+    
+    <meta property="og:tags" content="linux">
+    
+    <meta property="og:tags" content="san">
+    
+    <meta property="og:tags" content="ubuntu">
+    
+    <meta name="generator" content="Hugo 0.18.1" />
+    <title>Home Lab: SAN &middot; int0x80</title>
+    
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.9.0/styles/ocean.min.css">
+    
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.3.0/css/font-awesome.min.css">
+    
+    <link rel="stylesheet" href="https://int0x80.github.io/blog/css/style.css">
+    
+    <link href="" rel="alternate" type="application/rss+xml" title="int0x80" />
+    
+    
+    <link rel="icon" href="https://int0x80.github.io/blog/favicon.ico" />
+    
+
+    
+    
+</head>
+<body>
+<nav class="navbar navbar-default navbar-fixed-top visible-xs">
+	<div class="container-fluid">
+		<div class="navbar-header">
+			<button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+				<span class="sr-only">Toggle navigation</span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+			</button>
+			
+				<a class="navbar-brand" href="https://int0x80.github.io/blog/">int0x80</a>
+			
+		</div>
+		<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+			<ul class="nav navbar-nav">
+				
+				
+					<li><a href="https://int0x80.github.io/blog/about">About</a></li>
+				
+					<li><a href="https://int0x80.github.io/blog/">Blog</a></li>
+				
+			</ul>
+		</div>
+	</div>
+</nav>
+<div class="container-fluid">
+	<div class="row">
+		<div id="menu" class="hidden-xs col-sm-4 col-md-3">
+	<div id="menu-content" class="vertical-align">
+		
+			<h1 class="text-center"><a href="https://int0x80.github.io/blog/">int0x80</a></h1>
+		
+		
+		
+			<small class="text-center center-block">Hack All The Things</small>
+		
+		
+		
+			<img id="profile-pic" src="https://int0x80.github.io/blog//img/int0x80.jpg" alt="My Picture" class="img-circle center-block">
+		
+		<div id="social" class="text-center">
+			<a href="https://twitter.com/int0x80"><i class="fa fa-twitter fa-2x"></i></a>
+			
+			<a href="https://github.com/int0x80"><i class="fa fa-github fa-2x"></i></a>
+			<a href="mailto:eighty@int0x80.com"><i class="fa fa-envelope-o fa-2x"></i></a>
+		</div>
+		<div id="links" class="text-center">
+			
+			
+				<a href="https://int0x80.github.io/blog/about">About</a>
+			
+				<a href="https://int0x80.github.io/blog/">Blog</a>
+			
+		</div>
+	</div>
+</div>
+		<div id="content" class="col-xs-12 col-sm-8 col-md-9">
+			<div class="row">
+				<div id="post" class="col-sm-offset-1 col-sm-10 col-md-10 col-lg-8">
+
+<main>
+	<header>
+		<h1>Home Lab: SAN</h1>
+	</header>
+
+	<article>
+		<p>This post is the second in a three-part series covering my lab at home (<a href="https://int0x80.github.io/blog/post/home-lab-overview/">Part 1</a>).  The SAN runs Ubuntu Server 16.04 and exposes ~22TB of storage via 10Gbps link.  The ESXi node then utilizes that storage via iSCSI.</p>
+
+<p>This build had a lot of first-time experiences for me.  My first SAN, my first hardware RAID, and my first exposure to iSCSI.  Some limitations of the build are already visible, along with some ways I could have saved money, but I am pretty happy with the current setup and will address growing pains as they arrive.</p>
+
+<h1 id="hardware">Hardware</h1>
+
+<ul>
+<li><a href="http://www.ebay.com/itm/252519213489">ASRock 970 Extreme3 R1.01 Socket AM3+ Motherboard</a>: $44.99</li>
+<li><a href="https://www.amazon.com/dp/B0071RSMKA">CPU Fan Bracket Base for AM3 socket</a>: $5.49</li>
+<li><a href="http://www.ebay.com/itm/222305768852">16GB PC3-14900E DDR3 ECC RAM</a>: $100.00</li>
+<li><a href="http://www.ebay.com/itm/350983607686">MELLANOX CONNECTX-2 PCIe 10Gbps ETHERNET NIC</a> (2x): $34.60</li>
+<li><a href="http://www.fs.com/products/21269.html">10G SFP+ Passive Direct Attach Copper Twinax Cable 30AWG</a>: $9.50</li>
+<li><a href="http://www.areca.com.tw/products/1880.htm">Areca ARC-1880i</a>: $149.95</li>
+<li><a href="https://www.amazon.com/dp/B005E2XTO8">Mini SAS to SATA Breakout Cable</a> (2x): $36.52</li>
+<li><a href="https://www.amazon.com/dp/B01HXYRJYK">Seasonic 650W 80 PLUS Titanium PSU</a>: $173.19</li>
+<li><a href="https://www.amazon.com/dp/B0091IZ1ZG">Rosewill 4U Server Chassis (RSV-L4500)</a>: $104.99</li>
+<li><a href="https://www.newegg.com/Product/Product.aspx?Item=N82E16820178966">PNY CS1311 2.5&rdquo; 120GB SSD</a>: $49.99</li>
+<li><a href="http://www.amazon.com/dp/B0143BOR5A">WD Red 6TB Pro</a> (6x): $1782.92</li>
+</ul>
+
+<p><strong>Total:</strong> $2492.14</p>
+
+<p>Management of the system is done via SSH through the onboard NIC, while storage is exposed via iSCSI using the 10Gbps NIC.</p>
+
+<p>Some of the hardware components might seem like odd selections or at least a bit outdated.  Since this was my first build and I just wanted to get something up and running with minimal headaches, I based my build off of <a href="https://thehomeserverblog.com/esxi-storage/building-a-homemade-san-on-the-cheap-32tb-for-1500/">this whitebox build</a> I found.  Everything runs fine so no real regrets thus far.  Let&rsquo;s look more at the configuration and setup.</p>
+
+<h1 id="areca-arc-1880i">Areca ARC-1880i</h1>
+
+<p>The main step in setting up the storage was initializing the RAID with the correct parameters.  With 6 drives at 6TB each, I went with a RAID6 to expose ~22TB of storage.  I wanted to use 4k blocks but ran into some issues on ESXi, so the only option was to use the 64-bit LBA blocks for the RAID.  I selected a stripe size of 64k and waited ~9 hours for the RAID to initialize.</p>
+
+<p><strong>Note:</strong> If you want to do any quick tests with a RAID, simply build a RAID0 and it will be ready immediately.</p>
+
+<h1 id="video-card">Video Card</h1>
+
+<p>One of the limitations I encountered early was that the system wanted a video card to boot.  Most cards are PCI-e now, but the PCI-e slots on the board were taken by the 10Gbps NIC and the RAID card.  Fortunately, <a href="https://twitter.com/indiecom">jgor</a> gave me an old PCI video card that he had.  There was some tom-foolery with getting the UEFI screen to display initially, but eventually things started working.  Keep this in mind if you decide to mirror my build.</p>
+
+<h1 id="10gbps-twinax-cable">10Gbps Twinax Cable</h1>
+
+<p>The 10Gbps cable linked above is about 18&rdquo; in length.  This means the connected 10Gbps NICs need to be in very close proximity.  It shouldn&rsquo;t be an issue for systems racked adjacent to each other, but in any other case you might consider a longer cable.</p>
+
+<h1 id="iscsi">iSCSI</h1>
+
+<p>After situating the hardware, I installed Ubuntu Server to the SSD.  Initially, I went with 16.10 as it was the most recent release, but encountered some issues and downgraded to 16.04.</p>
+
+<p>Installing the necessary packages was simple.</p>
+
+<pre><code>$ sudo apt update &amp;&amp; sudo apt dist-upgrade -y
+$ sudo apt install -y iscsitarget iscsitarget-dkms
+$ sudo sed -i -e &quot;s/ISCSITARGET_ENABLE=false/ISCSITARGET_ENABLE=true/&quot; /etc/default/iscsitarget
+</code></pre>
+
+<p>The last steps are to manually add the LUN, which is essentially a label applied to the storage interface.</p>
+
+<pre><code>$ sudo ietadm --op new --tid=3 --params Name=iqn.2014-11.home.lab.san:storage03  
+$ sudo ietadm --op new --tid=3 --lun=0 --params Path=/dev/sda1,Type=blockio  
+</code></pre>
+
+<p>We&rsquo;ll cover the ESXi side of things in the next post, but the iSCSI adapter should now see the target storage available.</p>
+
+<p><img src="https://cloud.githubusercontent.com/assets/1061032/22211254/5b317232-e141-11e6-9e1b-e0d8fc2aa3e4.png" alt="ESXi iSCSI adapter" /></p>
+
+<h2 id="further-testing">Further Testing</h2>
+
+<p>If you want to do some quick tests, or just mess around with iSCSI some more, there are some simple processes you can explore.  Some quick notes:</p>
+
+<ul>
+<li>ESXi 10Gbps NIC: <code>10.11.1.2</code></li>
+<li>SAN 10Gbps NIC: <code>10.11.1.1</code></li>
+<li>SAN Management NIC: <code>192.168.1.5</code></li>
+</ul>
+
+<h3 id="verify-the-iscsi-service-is-listening-and-reachable">Verify the iSCSI service is listening and reachable</h3>
+
+<pre><code># from the ESXi node
+[root@esxi:~] nc -z -s 10.11.1.2 10.11.1.1 3260  
+Connection to 10.11.1.1 3260 port [tcp/*] succeeded!
+</code></pre>
+
+<h3 id="add-a-small-iscsi-target-on-the-san">Add a small iSCSI target on the SAN</h3>
+
+<pre><code># on the SAN, 192.168.1.5
+$ sudo dd if=/dev/zero of=/tmp/fileio.img bs=1 count=0 seek=2G  
+$ ls -lh /tmp/fileio.img  
+-rw-r--r-- 1 root root 2.0G Jan  3 11:45 /tmp/fileio.img  
+  
+$ sudo grep -v &quot;^\s*#&quot; /etc/iet/ietd.conf | grep -v &quot;^$&quot;  
+Target iqn.2014-11.home.lab.san:storage01  
+  Lun 0 Path=/tmp/fileio.img,Type=fileio  
+</code></pre>
+
+<h3 id="look-for-targets-via-the-management-interface">Look for targets via the management interface</h3>
+
+<pre><code># from a test system, 192.168.1.134
+$ sudo iscsiadm -m discovery -t st -p 192.168.1.5  
+192.168.1.5:3260,1 iqn.2014-11.home.lab.san:storage01  
+10.11.1.1:3260,1 iqn.2014-11.home.lab.san:storage01  
+</code></pre>
+
+<h3 id="login-from-the-management-interface">Login from the management interface</h3>
+
+<pre><code># from a test system, 192.168.1.134
+$ sudo iscsiadm -m node --login  
+Logging in to [iface: default, target: iqn.2014-11.home.lab.san:storage01, portal: 10.11.1.1,3260] (multiple)  
+Logging in to [iface: default, target: iqn.2014-11.home.lab.san:storage01, portal: 192.168.1.5,3260] (multiple)  
+iscsiadm: Could not login to [iface: default, target: iqn.2014-11.home.lab.san:storage01, portal: 10.11.1.1,3260].  
+iscsiadm: initiator reported error (8 - connection timed out)  
+Login to [iface: default, target: iqn.2014-11.home.lab.san:storage01, portal: 192.168.1.5,3260] successful.  
+iscsiadm: Could not log into all portals  
+</code></pre>
+
+<p>Makes sense that the target on <code>10.11.1.1</code> is unavailable as there&rsquo;s no route to that interface from the management network.  The target on the management interface (<code>192.168.1.5</code>) is successful.</p>
+
+<h3 id="examine-iscsi-sessions-on-the-san">Examine iSCSI sessions on the SAN</h3>
+
+<pre><code>$ sudo cat /proc/net/iet/session  
+tid:2 name:iqn.2014-11.home.lab.san:storage01  
+        sid:1688849964925440 initiator:iqn.1993-08.org.debian:01:399510298987  
+                cid:0 ip:192.168.1.134 state:active hd:none dd:none  
+        sid:564049469047296 initiator:iqn.1998-01.com.vmware:esxi-56ec2846  
+                cid:0 ip:10.11.1.2 state:active hd:none dd:none  
+</code></pre>
+
+<h3 id="logout-from-your-test-session">Logout from your test session</h3>
+
+<pre><code># from a test system, 192.168.1.134
+$ sudo iscsiadm -m node -U all  
+Logging out of session [sid: 4, target: iqn.2014-11.home.lab.san:storage01, portal: 192.168.1.5,3260]  
+Logout of [sid: 4, target: iqn.2014-11.home.lab.san:storage01, portal: 192.168.1.5,3260] successful.
+</code></pre>
+
+<h3 id="logs-ftw">Logs, ftw!</h3>
+
+<p>All of your iSCSI interactions should show up under <code>/var/log/syslog</code>.  This can also be utilized when troubleshooting configuration issues.</p>
+
+<h1 id="nic-name-assignment">NIC Name Assignment</h1>
+
+<p>Another issue encountered during the initial tests of the build was that the NIC would be assigned a different name based on the hardware present in the system.  Before adding the PCI video card, I&rsquo;d removed the 10Gbps NIC and used a PCI-e video card to configure the UEFI.</p>
+
+<p>This was the hardware configuration at the time of the OS install which caused the onboard NIC, used for management, to be named <code>enp6s0</code>.  When the PCI-e video card was replaced with the 10Gbps NIC, I quickly learned that the onboard NIC was renamed to <code>enp7s0</code> &ndash; for which no entry existed in <code>/etc/network/interfaces</code>.</p>
+
+<p>This is due to systemd&rsquo;s approach to naming nomenclature; about which you can find more information in <a href="https://askubuntu.com/a/689143">this AskUbuntu post</a>.  You can address this by adding <a href="https://askubuntu.com/a/785442">udev rules</a>, but I opted for an entry to my <code>interfaces</code> file:</p>
+
+<pre><code>$ cat /etc/network/interfaces
+# This file describes the network interfaces available on your system
+# and how to activate them. For more information, see interfaces(5).
+
+source /etc/network/interfaces.d/*
+
+# The loopback network interface
+auto lo
+iface lo inet loopback
+
+# The primary network interface
+auto enp7s0
+iface enp7s0 inet dhcp
+
+# The primary network interface when 10Gbps nic is not in
+auto enp6s0
+iface enp6s0 inet dhcp
+
+# 10Gbps nic
+auto enp1s0
+iface enp1s0 inet static
+  address 10.11.1.1
+  # gateway 10.11.1.1
+  netmask 255.255.255.0
+  network 10.11.1.0
+  broadcast 10.11.1.255
+</code></pre>
+
+<h1 id="wrapping-up">Wrapping Up</h1>
+
+<p>That completes the build of the SAN.  We will tie everything together from ESXi in the third/final post of the series.</p>
+	</article>
+</main>
+
+<div id="bottom-nav" class="text-center center-block">
+	<a href=" https://int0x80.github.io/blog/" class="btn btn-default"><i class="fa fa-home"></i> Home</a>
+</div>
+
+
+  <div id="disqus_thread"></div>
+<script type="text/javascript">
+    var disqus_shortname = 'disqus0x80';
+    var disqus_identifier = 'https:\/\/int0x80.github.io\/blog\/post\/home-lab-san\/';
+    var disqus_title = 'Home Lab: SAN';
+    var disqus_url = 'https:\/\/int0x80.github.io\/blog\/post\/home-lab-san\/';
+
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+  </div>
+  
+  <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.2/js/bootstrap.min.js"></script>
+  
+  
+  <script src="https://int0x80.github.io/blog//js/App.js"></script>
+  
+  <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.9.0/highlight.min.js"></script>
+  
+</body>
+</html>
