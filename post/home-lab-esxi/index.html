@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head prefix="og: http://ogp.me/ns# article: http://ogp.me/ns/article# website: http://ogp.me/ns/website#">
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+    <meta name="description" content="">
+    <meta property="og:title" content="Home Lab: ESXi">
+    
+    <meta property="og:type" content="article">
+    <meta property="article:published_time" content="2017-01-25">
+    
+    <meta property="og:description" content="">
+    <meta property="og:url" content="https://int0x80.github.io/blog/post/home-lab-esxi/">
+    <meta property="og:site_name" content="int0x80">
+    
+    <meta property="og:tags" content="esxi">
+    
+    <meta property="og:tags" content="lab">
+    
+    <meta property="og:tags" content="linux">
+    
+    <meta property="og:tags" content="san">
+    
+    <meta property="og:tags" content="ubuntu">
+    
+    <meta name="generator" content="Hugo 0.18.1" />
+    <title>Home Lab: ESXi &middot; int0x80</title>
+    
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.9.0/styles/ocean.min.css">
+    
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.3.0/css/font-awesome.min.css">
+    
+    <link rel="stylesheet" href="https://int0x80.github.io/blog/css/style.css">
+    
+    <link href="" rel="alternate" type="application/rss+xml" title="int0x80" />
+    
+    
+    <link rel="icon" href="https://int0x80.github.io/blog/favicon.ico" />
+    
+
+    
+    
+</head>
+<body>
+<nav class="navbar navbar-default navbar-fixed-top visible-xs">
+	<div class="container-fluid">
+		<div class="navbar-header">
+			<button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+				<span class="sr-only">Toggle navigation</span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+			</button>
+			
+				<a class="navbar-brand" href="https://int0x80.github.io/blog/">int0x80</a>
+			
+		</div>
+		<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+			<ul class="nav navbar-nav">
+				
+				
+					<li><a href="https://int0x80.github.io/blog/about">About</a></li>
+				
+					<li><a href="https://int0x80.github.io/blog/">Blog</a></li>
+				
+			</ul>
+		</div>
+	</div>
+</nav>
+<div class="container-fluid">
+	<div class="row">
+		<div id="menu" class="hidden-xs col-sm-4 col-md-3">
+	<div id="menu-content" class="vertical-align">
+		
+			<h1 class="text-center"><a href="https://int0x80.github.io/blog/">int0x80</a></h1>
+		
+		
+		
+			<small class="text-center center-block">Hack All The Things</small>
+		
+		
+		
+			<img id="profile-pic" src="https://int0x80.github.io/blog//img/int0x80.jpg" alt="My Picture" class="img-circle center-block">
+		
+		<div id="social" class="text-center">
+			<a href="https://twitter.com/int0x80"><i class="fa fa-twitter fa-2x"></i></a>
+			
+			<a href="https://github.com/int0x80"><i class="fa fa-github fa-2x"></i></a>
+			<a href="mailto:eighty@int0x80.com"><i class="fa fa-envelope-o fa-2x"></i></a>
+		</div>
+		<div id="links" class="text-center">
+			
+			
+				<a href="https://int0x80.github.io/blog/about">About</a>
+			
+				<a href="https://int0x80.github.io/blog/">Blog</a>
+			
+		</div>
+	</div>
+</div>
+		<div id="content" class="col-xs-12 col-sm-8 col-md-9">
+			<div class="row">
+				<div id="post" class="col-sm-offset-1 col-sm-10 col-md-10 col-lg-8">
+
+<main>
+	<header>
+		<h1>Home Lab: ESXi</h1>
+	</header>
+
+	<article>
+		<p>This is the final post in the three-part series covering my lab at home (<a href="https://int0x80.github.io/blog/post/home-lab-overview/">Part 1</a>, <a href="https://int0x80.github.io/blog/post/home-lab-san/">Part 2</a>).  The ESXi node runs vSphere 6 sporting two Xeon X5670 CPUs and 96GB of RAM.  Storage is accessed via iSCSI over a 10Gbps link to the SAN.</p>
+
+<p>This build was my first time working with ESXi.  Initially, I had all of my storage in the ESXi system before deciding to build a SAN.  Eventually the PSU in the ESXi node died, which prompted me to replace the PSU and commit to the SAN.  Other than that, the system runs great with plenty of resources for running many VMs concurrently. </p>
+
+<h1 id="hardware">Hardware</h1>
+
+<ul>
+<li><a href="http://h20564.www2.hp.com/hpsc/doc/public/display?docId=emr_na-c01709724">HP z800, 2x Xeon X5670, 96GB RAM </a>: $1400.00</li>
+<li><a href="http://www.ebay.com/itm/131999754708">HP z800 850W Power Supply</a>: $95.99</li>
+</ul>
+
+<p><strong>Total:</strong> $1495.99</p>
+
+<p>The intent was to re-purpose the drives in my old server to act as the storage for the new lab server.  The old server was primarily a file server running on old hardware and didn&rsquo;t have the resources to serve up VMs.  Unfortunately, two of the drives failed after the initial order of the workstation.  This was also a factor in deciding to build a SAN.</p>
+
+<h1 id="install-esxi-to-usb">Install ESXi to USB</h1>
+
+<p>Register a free account at <a href="https://vmware.com">vmware.com</a> and use the account to download a trial for vSphere 6.0 and vSphere Client.</p>
+
+<p>This is likely overkill but I was unfamiliar with this line of VMware products when I started.</p>
+
+<ul>
+<li><strong>ESXi:</strong> The hypervisor running on each system with VMs.  Also known as vSphere.  It is free and simply requires a license serial provided by vmware.com with a free account there.</li>
+<li><strong>vSphere Client:</strong> Windows application that interfaces with the ESXi server.  Create and manipulate VMs with this.  Also free.</li>
+</ul>
+
+<p>Boot the vSphere iso in a VM and attach a FAT32 formatted USB flash drive to the VM.  This is where ESXi will live so use a flash drive with at least 8GB of space that will not be missed.  Select the USB drive as the target install drive in the ESXi setup process.  Finish the install and the workstation can now boot ESXi from the USB drive.</p>
+
+<h1 id="connect-to-san-via-iscsi">Connect to SAN via iSCSI</h1>
+
+<p>The first part of the ESXi setup is attaching to the storage in the SAN so that OS images and VMs have somewhere to live.</p>
+
+<h2 id="add-network-adapter">Add Network Adapter</h2>
+
+<p>In vSphere Client, select the <strong>Configuration</strong> tab at the top followed by the <strong>Networking</strong> link on the left.  Next click <strong>Add Networking&hellip;</strong>.  I completed the setup process with the following details.</p>
+
+<ul>
+<li><strong>Connection Type:</strong> VMkernel</li>
+<li>Select the dedicated 10Gbps NIC</li>
+<li><strong>Network Label:</strong> iSCSI</li>
+<li><strong>IP Address:</strong> <code>10.11.1.2</code></li>
+<li><strong>Subnet Mask:</strong> <code>255.255.255.0</code></li>
+</ul>
+
+<p>This produces the resulting interface.</p>
+
+<p><img src="https://cloud.githubusercontent.com/assets/1061032/22218566/4afbb60a-e15c-11e6-8534-0a34a866c2ea.png" alt="ESXi iSCSI Network Adapter" /></p>
+
+<h2 id="add-storage-adapter">Add Storage Adapter</h2>
+
+<p>In vSphere Client, select the <strong>Configuration</strong> tab at the top followed by the <strong>Storage Adapters</strong> link on the left.  Next click <strong>Add&hellip;</strong>, and select <strong>Add Software iSCSI Adapter</strong>.  This produces the resulting adapter.</p>
+
+<p><img src="https://cloud.githubusercontent.com/assets/1061032/22219087/3e356b80-e15e-11e6-8685-3850e609abe9.png" alt="ESXi iSCSI Storage Adapter" /></p>
+
+<h2 id="storage-adapter-configuration">Storage Adapter Configuration</h2>
+
+<p>Still in the <strong>Storage Adapters</strong> window, click <strong>Properties&hellip;</strong>.  The <strong>General</strong> tab should show <code>Status: Enabled</code>, or you can enable it via the <strong>Configure&hellip;</strong> button.</p>
+
+<p>Under the <strong>Network Configuration</strong> tab, click <strong>Add&hellip;</strong> and select the iSCSI network adapter added in the previous section.</p>
+
+<p>Under the <strong>Dynamic Discovery</strong> tab, click <strong>Add&hellip;</strong> and enter the IP address and port of the SAN.  In my case <code>10.11.1.1</code> and <code>3260</code>, respectively.</p>
+
+<p>Allow ESXi to rescan the adapter, and you should see the resulting target now exposed.</p>
+
+<p><img src="https://cloud.githubusercontent.com/assets/1061032/22211254/5b317232-e141-11e6-9e1b-e0d8fc2aa3e4.png" alt="ESXi iSCSI adapter" /></p>
+
+<h1 id="create-datastore">Create Datastore</h1>
+
+<p>We now have storage available; ESXi just needs to be allowed access.  Select the <strong>Configuration</strong> tab at the top followed by the <strong>Storage</strong> link on the left.  Next click <strong>Add Storage&hellip;</strong>.</p>
+
+<p>The <strong>Disk/LUN</strong> option is default, then select your iSCSI target on the next screen.  The remaining defaults should all be fine, then name your datastore.</p>
+
+<p><img src="https://cloud.githubusercontent.com/assets/1061032/22219647/7063e6ca-e160-11e6-95b5-5c9bc412a366.png" alt="ESXi Datastore" /></p>
+
+<p>Files can be uploaded via the <code>Browse Datastore...</code> menu option from right-clicking the store.</p>
+
+<h1 id="wrapping-up">Wrapping Up</h1>
+
+<p>Finally the lab is setup and functional.  There is adequate storage, compute power, and memory to facilitate plenty of VMs running concurrently.  Systems and networks can quickly be spun up, used, and destroyed all with minimal overhead.  Now to hack things!</p>
+
+<hr />
+
+<h1 id="ps-pre-san-notes">PS: Pre-SAN Notes</h1>
+
+<p>Here are my notes on building everything in the z800 without the SAN.  Some of the referenced hardware components like the RAID card, etc are enumerated in the SAN write-up.</p>
+
+<h2 id="mini-sas-cable">Mini SAS Cable</h2>
+
+<p>The z800 has a bay with 4 trays for the hard drives that attach to SATA connectors with cables already run to the motherboard. The SATA connectors in the hard drive bay are attached to a separate device, not a standard SATA cable that can be unplugged and swapped out.  This left me stuck with the existing female SATA connectors coming from the bay.  Standard SAS-SATA break outs are SFF-8087 cables which also terminate in female SATA connectors.  In order to connect the four drives in the bay, I needed a different break out.  <a href="http://www.amazon.com/dp/B00WYA4SWU/">This cable</a> was $45 on Amazon, but I found it for $35 + $6.65 S&amp;H on eBay.</p>
+
+<h2 id="hard-drive-expansion-bays">Hard Drive Expansion Bays</h2>
+
+<p>The tool-free design of the z800 case leaves blank expansion bays on the face.  In order to fit additional hard drives, I purchased two <a href="https://www.amazon.com/dp/B00126U0VA/">Kingwin SATA Bay</a> trays.  These fit right in and connected directly to the Areca 1880i RAID card via SFF-8087 cable.</p>
+
+<h2 id="areca-arc-1880i">Areca ARC-1880i</h2>
+
+<p>Utilizing the RAID had two main aspects:  initializing the RAID with the correct parameters, and installing the driver to ESXi.</p>
+
+<h3 id="raid-initialization">RAID Initialization</h3>
+
+<p>With 6 drives at 6TB each, I went with a RAID6 to expose 24TB of storage.  ESXi does not work with the 4k blocks so the only option was to use the 64-bit LBA blocks for the RAID.  I selected a stripe size of 64k and waited ~9 hours for the RAID to initialize.</p>
+
+<p>If you want to do any quick tests with a RAID, simply build a RAID0 and it will be ready immediately.</p>
+
+<h3 id="driver-install">Driver Install</h3>
+
+<p>ESXi does not recognize the 1880i by default.  Grab the <a href="http://www.areca.com.tw/support/s_vmware/vmware.htm">vmware driver from Areca</a> and extract the vib file.  Enable the ESXi Shell and SSH via console on the ESXi host under <code>Troubleshooting Options</code> in the <strong>System Customization</strong> menu.  Next, scp the vib file to /tmp/ on the ESXi host using the <code>root</code> account previously configured.  Lastly, ssh into the root account on the ESXi host and run the following command replacing <code>your.vib</code> with the correct filename:</p>
+
+<pre><code># from the ESXi node
+[root@esxi:~] esxcli software vib install -v /tmp/&lt;your.vib&gt; --no-sig-check
+</code></pre>
+
+<p>Reboot the server and the RAID should now show up in vSphere Client.</p>
+	</article>
+</main>
+
+<div id="bottom-nav" class="text-center center-block">
+	<a href=" https://int0x80.github.io/blog/" class="btn btn-default"><i class="fa fa-home"></i> Home</a>
+</div>
+
+
+  <div id="disqus_thread"></div>
+<script type="text/javascript">
+    var disqus_shortname = 'disqus0x80';
+    var disqus_identifier = 'https:\/\/int0x80.github.io\/blog\/post\/home-lab-esxi\/';
+    var disqus_title = 'Home Lab: ESXi';
+    var disqus_url = 'https:\/\/int0x80.github.io\/blog\/post\/home-lab-esxi\/';
+
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+  </div>
+  
+  <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.2/js/bootstrap.min.js"></script>
+  
+  
+  <script src="https://int0x80.github.io/blog//js/App.js"></script>
+  
+  <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.9.0/highlight.min.js"></script>
+  
+</body>
+</html>

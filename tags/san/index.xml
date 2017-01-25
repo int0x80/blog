@@ -9,6 +9,127 @@
     <atom:link href="https://int0x80.github.io/blog/tags/san/index.xml" rel="self" type="application/rss+xml" />
     
     <item>
+      <title>Home Lab: ESXi</title>
+      <link>https://int0x80.github.io/blog/post/home-lab-esxi/</link>
+      <pubDate>Wed, 25 Jan 2017 10:47:27 -0600</pubDate>
+      
+      <guid>https://int0x80.github.io/blog/post/home-lab-esxi/</guid>
+      <description>&lt;p&gt;This is the final post in the three-part series covering my lab at home (&lt;a href=&#34;https://int0x80.github.io/blog/post/home-lab-overview/&#34;&gt;Part 1&lt;/a&gt;, &lt;a href=&#34;https://int0x80.github.io/blog/post/home-lab-san/&#34;&gt;Part 2&lt;/a&gt;).  The ESXi node runs vSphere 6 sporting two Xeon X5670 CPUs and 96GB of RAM.  Storage is accessed via iSCSI over a 10Gbps link to the SAN.&lt;/p&gt;
+
+&lt;p&gt;This build was my first time working with ESXi.  Initially, I had all of my storage in the ESXi system before deciding to build a SAN.  Eventually the PSU in the ESXi node died, which prompted me to replace the PSU and commit to the SAN.  Other than that, the system runs great with plenty of resources for running many VMs concurrently. &lt;/p&gt;
+
+&lt;h1 id=&#34;hardware&#34;&gt;Hardware&lt;/h1&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;http://h20564.www2.hp.com/hpsc/doc/public/display?docId=emr_na-c01709724&#34;&gt;HP z800, 2x Xeon X5670, 96GB RAM &lt;/a&gt;: $1400.00&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://www.ebay.com/itm/131999754708&#34;&gt;HP z800 850W Power Supply&lt;/a&gt;: $95.99&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;strong&gt;Total:&lt;/strong&gt; $1495.99&lt;/p&gt;
+
+&lt;p&gt;The intent was to re-purpose the drives in my old server to act as the storage for the new lab server.  The old server was primarily a file server running on old hardware and didn&amp;rsquo;t have the resources to serve up VMs.  Unfortunately, two of the drives failed after the initial order of the workstation.  This was also a factor in deciding to build a SAN.&lt;/p&gt;
+
+&lt;h1 id=&#34;install-esxi-to-usb&#34;&gt;Install ESXi to USB&lt;/h1&gt;
+
+&lt;p&gt;Register a free account at &lt;a href=&#34;https://vmware.com&#34;&gt;vmware.com&lt;/a&gt; and use the account to download a trial for vSphere 6.0 and vSphere Client.&lt;/p&gt;
+
+&lt;p&gt;This is likely overkill but I was unfamiliar with this line of VMware products when I started.&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;ESXi:&lt;/strong&gt; The hypervisor running on each system with VMs.  Also known as vSphere.  It is free and simply requires a license serial provided by vmware.com with a free account there.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;vSphere Client:&lt;/strong&gt; Windows application that interfaces with the ESXi server.  Create and manipulate VMs with this.  Also free.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Boot the vSphere iso in a VM and attach a FAT32 formatted USB flash drive to the VM.  This is where ESXi will live so use a flash drive with at least 8GB of space that will not be missed.  Select the USB drive as the target install drive in the ESXi setup process.  Finish the install and the workstation can now boot ESXi from the USB drive.&lt;/p&gt;
+
+&lt;h1 id=&#34;connect-to-san-via-iscsi&#34;&gt;Connect to SAN via iSCSI&lt;/h1&gt;
+
+&lt;p&gt;The first part of the ESXi setup is attaching to the storage in the SAN so that OS images and VMs have somewhere to live.&lt;/p&gt;
+
+&lt;h2 id=&#34;add-network-adapter&#34;&gt;Add Network Adapter&lt;/h2&gt;
+
+&lt;p&gt;In vSphere Client, select the &lt;strong&gt;Configuration&lt;/strong&gt; tab at the top followed by the &lt;strong&gt;Networking&lt;/strong&gt; link on the left.  Next click &lt;strong&gt;Add Networking&amp;hellip;&lt;/strong&gt;.  I completed the setup process with the following details.&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;Connection Type:&lt;/strong&gt; VMkernel&lt;/li&gt;
+&lt;li&gt;Select the dedicated 10Gbps NIC&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Network Label:&lt;/strong&gt; iSCSI&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;IP Address:&lt;/strong&gt; &lt;code&gt;10.11.1.2&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Subnet Mask:&lt;/strong&gt; &lt;code&gt;255.255.255.0&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;This produces the resulting interface.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://cloud.githubusercontent.com/assets/1061032/22218566/4afbb60a-e15c-11e6-8534-0a34a866c2ea.png&#34; alt=&#34;ESXi iSCSI Network Adapter&#34; /&gt;&lt;/p&gt;
+
+&lt;h2 id=&#34;add-storage-adapter&#34;&gt;Add Storage Adapter&lt;/h2&gt;
+
+&lt;p&gt;In vSphere Client, select the &lt;strong&gt;Configuration&lt;/strong&gt; tab at the top followed by the &lt;strong&gt;Storage Adapters&lt;/strong&gt; link on the left.  Next click &lt;strong&gt;Add&amp;hellip;&lt;/strong&gt;, and select &lt;strong&gt;Add Software iSCSI Adapter&lt;/strong&gt;.  This produces the resulting adapter.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://cloud.githubusercontent.com/assets/1061032/22219087/3e356b80-e15e-11e6-8685-3850e609abe9.png&#34; alt=&#34;ESXi iSCSI Storage Adapter&#34; /&gt;&lt;/p&gt;
+
+&lt;h2 id=&#34;storage-adapter-configuration&#34;&gt;Storage Adapter Configuration&lt;/h2&gt;
+
+&lt;p&gt;Still in the &lt;strong&gt;Storage Adapters&lt;/strong&gt; window, click &lt;strong&gt;Properties&amp;hellip;&lt;/strong&gt;.  The &lt;strong&gt;General&lt;/strong&gt; tab should show &lt;code&gt;Status: Enabled&lt;/code&gt;, or you can enable it via the &lt;strong&gt;Configure&amp;hellip;&lt;/strong&gt; button.&lt;/p&gt;
+
+&lt;p&gt;Under the &lt;strong&gt;Network Configuration&lt;/strong&gt; tab, click &lt;strong&gt;Add&amp;hellip;&lt;/strong&gt; and select the iSCSI network adapter added in the previous section.&lt;/p&gt;
+
+&lt;p&gt;Under the &lt;strong&gt;Dynamic Discovery&lt;/strong&gt; tab, click &lt;strong&gt;Add&amp;hellip;&lt;/strong&gt; and enter the IP address and port of the SAN.  In my case &lt;code&gt;10.11.1.1&lt;/code&gt; and &lt;code&gt;3260&lt;/code&gt;, respectively.&lt;/p&gt;
+
+&lt;p&gt;Allow ESXi to rescan the adapter, and you should see the resulting target now exposed.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://cloud.githubusercontent.com/assets/1061032/22211254/5b317232-e141-11e6-9e1b-e0d8fc2aa3e4.png&#34; alt=&#34;ESXi iSCSI adapter&#34; /&gt;&lt;/p&gt;
+
+&lt;h1 id=&#34;create-datastore&#34;&gt;Create Datastore&lt;/h1&gt;
+
+&lt;p&gt;We now have storage available; ESXi just needs to be allowed access.  Select the &lt;strong&gt;Configuration&lt;/strong&gt; tab at the top followed by the &lt;strong&gt;Storage&lt;/strong&gt; link on the left.  Next click &lt;strong&gt;Add Storage&amp;hellip;&lt;/strong&gt;.&lt;/p&gt;
+
+&lt;p&gt;The &lt;strong&gt;Disk/LUN&lt;/strong&gt; option is default, then select your iSCSI target on the next screen.  The remaining defaults should all be fine, then name your datastore.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://cloud.githubusercontent.com/assets/1061032/22219647/7063e6ca-e160-11e6-95b5-5c9bc412a366.png&#34; alt=&#34;ESXi Datastore&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Files can be uploaded via the &lt;code&gt;Browse Datastore...&lt;/code&gt; menu option from right-clicking the store.&lt;/p&gt;
+
+&lt;h1 id=&#34;wrapping-up&#34;&gt;Wrapping Up&lt;/h1&gt;
+
+&lt;p&gt;Finally the lab is setup and functional.  There is adequate storage, compute power, and memory to facilitate plenty of VMs running concurrently.  Systems and networks can quickly be spun up, used, and destroyed all with minimal overhead.  Now to hack things!&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h1 id=&#34;ps-pre-san-notes&#34;&gt;PS: Pre-SAN Notes&lt;/h1&gt;
+
+&lt;p&gt;Here are my notes on building everything in the z800 without the SAN.  Some of the referenced hardware components like the RAID card, etc are enumerated in the SAN write-up.&lt;/p&gt;
+
+&lt;h2 id=&#34;mini-sas-cable&#34;&gt;Mini SAS Cable&lt;/h2&gt;
+
+&lt;p&gt;The z800 has a bay with 4 trays for the hard drives that attach to SATA connectors with cables already run to the motherboard. The SATA connectors in the hard drive bay are attached to a separate device, not a standard SATA cable that can be unplugged and swapped out.  This left me stuck with the existing female SATA connectors coming from the bay.  Standard SAS-SATA break outs are SFF-8087 cables which also terminate in female SATA connectors.  In order to connect the four drives in the bay, I needed a different break out.  &lt;a href=&#34;http://www.amazon.com/dp/B00WYA4SWU/&#34;&gt;This cable&lt;/a&gt; was $45 on Amazon, but I found it for $35 + $6.65 S&amp;amp;H on eBay.&lt;/p&gt;
+
+&lt;h2 id=&#34;hard-drive-expansion-bays&#34;&gt;Hard Drive Expansion Bays&lt;/h2&gt;
+
+&lt;p&gt;The tool-free design of the z800 case leaves blank expansion bays on the face.  In order to fit additional hard drives, I purchased two &lt;a href=&#34;https://www.amazon.com/dp/B00126U0VA/&#34;&gt;Kingwin SATA Bay&lt;/a&gt; trays.  These fit right in and connected directly to the Areca 1880i RAID card via SFF-8087 cable.&lt;/p&gt;
+
+&lt;h2 id=&#34;areca-arc-1880i&#34;&gt;Areca ARC-1880i&lt;/h2&gt;
+
+&lt;p&gt;Utilizing the RAID had two main aspects:  initializing the RAID with the correct parameters, and installing the driver to ESXi.&lt;/p&gt;
+
+&lt;h3 id=&#34;raid-initialization&#34;&gt;RAID Initialization&lt;/h3&gt;
+
+&lt;p&gt;With 6 drives at 6TB each, I went with a RAID6 to expose 24TB of storage.  ESXi does not work with the 4k blocks so the only option was to use the 64-bit LBA blocks for the RAID.  I selected a stripe size of 64k and waited ~9 hours for the RAID to initialize.&lt;/p&gt;
+
+&lt;p&gt;If you want to do any quick tests with a RAID, simply build a RAID0 and it will be ready immediately.&lt;/p&gt;
+
+&lt;h3 id=&#34;driver-install&#34;&gt;Driver Install&lt;/h3&gt;
+
+&lt;p&gt;ESXi does not recognize the 1880i by default.  Grab the &lt;a href=&#34;http://www.areca.com.tw/support/s_vmware/vmware.htm&#34;&gt;vmware driver from Areca&lt;/a&gt; and extract the vib file.  Enable the ESXi Shell and SSH via console on the ESXi host under &lt;code&gt;Troubleshooting Options&lt;/code&gt; in the &lt;strong&gt;System Customization&lt;/strong&gt; menu.  Next, scp the vib file to /tmp/ on the ESXi host using the &lt;code&gt;root&lt;/code&gt; account previously configured.  Lastly, ssh into the root account on the ESXi host and run the following command replacing &lt;code&gt;your.vib&lt;/code&gt; with the correct filename:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;# from the ESXi node
+[root@esxi:~] esxcli software vib install -v /tmp/&amp;lt;your.vib&amp;gt; --no-sig-check
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Reboot the server and the RAID should now show up in vSphere Client.&lt;/p&gt;</description>
+    </item>
+    
+    <item>
       <title>Home Lab: SAN</title>
       <link>https://int0x80.github.io/blog/post/home-lab-san/</link>
       <pubDate>Tue, 24 Jan 2017 12:45:19 -0600</pubDate>
@@ -195,7 +316,7 @@ iface enp1s0 inet static
       <pubDate>Mon, 23 Jan 2017 16:05:31 -0600</pubDate>
       
       <guid>https://int0x80.github.io/blog/post/home-lab-overview/</guid>
-      <description>&lt;p&gt;Your home lab is a crucial platform for learning and advancing your skills.  From the comfort and privacy of your own home; you can spin up VMs, build infrastructure, break targets, repeatedly fail, and eventually succeed.  This post is the first in a three-part series covering my lab at home.  &lt;/p&gt;
+      <description>&lt;p&gt;Your home lab is a crucial platform for learning and advancing your skills.  From the comfort and privacy of your own home; you can spin up VMs, build infrastructure, break targets, repeatedly fail, and eventually succeed.  This post is the first in a three-part series covering my lab at home (&lt;a href=&#34;https://int0x80.github.io/blog/post/home-lab-san/&#34;&gt;Part 2&lt;/a&gt;).  &lt;/p&gt;
 
 &lt;h1 id=&#34;series-structure&#34;&gt;Series Structure&lt;/h1&gt;
 
