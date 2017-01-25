@@ -135,7 +135,7 @@
       <pubDate>Tue, 24 Jan 2017 12:45:19 -0600</pubDate>
       
       <guid>https://int0x80.github.io/blog/post/home-lab-san/</guid>
-      <description>&lt;p&gt;This post is the second in a three-part series covering my lab at home (&lt;a href=&#34;https://int0x80.github.io/blog/post/home-lab-overview/&#34;&gt;Part 1&lt;/a&gt;).  The SAN runs Ubuntu Server 16.04 and exposes ~22TB of storage via 10Gbps link.  The ESXi node then utilizes that storage via iSCSI.&lt;/p&gt;
+      <description>&lt;p&gt;This post is the second in a three-part series covering my lab at home (&lt;a href=&#34;https://int0x80.github.io/blog/post/home-lab-overview/&#34;&gt;Part 1&lt;/a&gt;, &lt;a href=&#34;https://int0x80.github.io/blog/post/home-lab-esxi/&#34;&gt;Part 3&lt;/a&gt;).  The SAN runs Ubuntu Server 16.04 and exposes ~22TB of storage via 10Gbps link.  The ESXi node then utilizes that storage via iSCSI.&lt;/p&gt;
 
 &lt;p&gt;This build had a lot of first-time experiences for me.  My first SAN, my first hardware RAID, and my first exposure to iSCSI.  Some limitations of the build are already visible, along with some ways I could have saved money, but I am pretty happy with the current setup and will address growing pains as they arrive.&lt;/p&gt;
 
