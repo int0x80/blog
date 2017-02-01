@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head prefix="og: http://ogp.me/ns# article: http://ogp.me/ns/article# website: http://ogp.me/ns/website#">
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+    <meta name="description" content="">
+    <meta property="og:title" content="Easy Android Application Patching">
+    
+    <meta property="og:type" content="article">
+    <meta property="article:published_time" content="2017-02-01">
+    
+    <meta property="og:description" content="">
+    <meta property="og:url" content="https://int0x80.github.io/blog/post/easy-android-application-patching/">
+    <meta property="og:site_name" content="int0x80">
+    
+    <meta property="og:tags" content="android">
+    
+    <meta property="og:tags" content="apk">
+    
+    <meta property="og:tags" content="apktool">
+    
+    <meta property="og:tags" content="reverse engineering">
+    
+    <meta name="generator" content="Hugo 0.18.1" />
+    <title>Easy Android Application Patching &middot; int0x80</title>
+    
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.9.0/styles/ocean.min.css">
+    
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.3.0/css/font-awesome.min.css">
+    
+    <link rel="stylesheet" href="https://int0x80.github.io/blog/css/style.css">
+    
+    <link href="" rel="alternate" type="application/rss+xml" title="int0x80" />
+    
+    
+    <link rel="icon" href="https://int0x80.github.io/blog/favicon.ico" />
+    
+
+    
+    
+</head>
+<body>
+<nav class="navbar navbar-default navbar-fixed-top visible-xs">
+	<div class="container-fluid">
+		<div class="navbar-header">
+			<button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+				<span class="sr-only">Toggle navigation</span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+			</button>
+			
+				<a class="navbar-brand" href="https://int0x80.github.io/blog/">int0x80</a>
+			
+		</div>
+		<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+			<ul class="nav navbar-nav">
+				
+				
+					<li><a href="https://int0x80.github.io/blog/about">About</a></li>
+				
+					<li><a href="https://int0x80.github.io/blog/">Blog</a></li>
+				
+			</ul>
+		</div>
+	</div>
+</nav>
+<div class="container-fluid">
+	<div class="row">
+		<div id="menu" class="hidden-xs col-sm-4 col-md-3">
+	<div id="menu-content" class="vertical-align">
+		
+			<h1 class="text-center"><a href="https://int0x80.github.io/blog/">int0x80</a></h1>
+		
+		
+		
+			<small class="text-center center-block">Hack All The Things</small>
+		
+		
+		
+			<img id="profile-pic" src="https://int0x80.github.io/blog//img/int0x80.jpg" alt="My Picture" class="img-circle center-block">
+		
+		<div id="social" class="text-center">
+			<a href="https://twitter.com/int0x80"><i class="fa fa-twitter fa-2x"></i></a>
+			
+			<a href="https://github.com/int0x80"><i class="fa fa-github fa-2x"></i></a>
+			<a href="mailto:eighty@int0x80.com"><i class="fa fa-envelope-o fa-2x"></i></a>
+		</div>
+		<div id="links" class="text-center">
+			
+			
+				<a href="https://int0x80.github.io/blog/about">About</a>
+			
+				<a href="https://int0x80.github.io/blog/">Blog</a>
+			
+		</div>
+	</div>
+</div>
+		<div id="content" class="col-xs-12 col-sm-8 col-md-9">
+			<div class="row">
+				<div id="post" class="col-sm-offset-1 col-sm-10 col-md-10 col-lg-8">
+
+<main>
+	<header>
+		<h1>Easy Android Application Patching</h1>
+	</header>
+
+	<article>
+		<p>Many reasons exist for patching an application: disabling a buggy &lsquo;feature&rsquo;, cheating at a game, etc.  I was recently looking at a bitcoin ticker app, and figured it would be nice to use the app without the ads.  Removing ads is as good a reason as any for patching an application as I don&rsquo;t have an ad blocker in Android.</p>
+
+<h1 id="prep-the-patient">Prep the Patient</h1>
+
+<p>First things first, we need an apk.  I used <a href="http://apkfind.com">APK Find</a> to acquire the standalone file.</p>
+
+<pre><code>$ checksums Bitcoin-Ticker-Widget-1.7.6.apk 
+MD5:      86aa21393d018fecc21d79a3af325d7c  Bitcoin-Ticker-Widget-1.7.6.apk
+SHA-1:    4a7b1a3a8e5d9df0b5659d0848dd3161b17c7394  Bitcoin-Ticker-Widget-1.7.6.apk
+SHA-256:  e18e512c6a67c9081f626744c826a7f8a104e7114653847fb12620e816ecfb66  Bitcoin-Ticker-Widget-1.7.6.apk
+</code></pre>
+
+<h1 id="snoop-onto-them">Snoop onto Them</h1>
+
+<p>First, create an Android Virtual Device (AVD) to use for testing.  I grabbed <a href="https://developer.android.com/studio/index.html">Android Studio</a>, and followed the <a href="https://developer.android.com/studio/run/managing-avds.html">step-by-step instructions</a>.  My AVD is a Nexus 5x using API 23.</p>
+
+<p>Next, let&rsquo;s configure a proxy to listen on all interfaces.  I&rsquo;m using Burp on port 8181.</p>
+
+<p><img src="https://cloud.githubusercontent.com/assets/1061032/22529218/3fdb1d5a-e89c-11e6-884a-2b49d4ef6e4e.png" alt="Burp listening on 8181" width="50%" height="50%" /></p>
+
+<p>Now we need to configure the AVD to use our proxy.  Dig through the following menus in your Android Virtual Device to reach the config screen.</p>
+
+<ul>
+<li>Settings</li>
+<li>Wireless &amp; networks</li>
+<li>Cellular networks</li>
+<li>Access Point Names</li>
+<li>T-Mobile (or whatever provider is shown here)</li>
+</ul>
+
+<p>Set the following values:</p>
+
+<ul>
+<li><strong>Proxy:</strong> <code>10.0.2.2</code></li>
+<li><strong>Port:</strong> <code>8181</code></li>
+</ul>
+
+<p>Now power off the device.</p>
+
+<p>Grab the IP address for your internet-connected network interface; mine was <code>192.168.1.134</code>.  Now let&rsquo;s launch the emulator from the <code>tools</code> directory.  Replace <code>Nexus_5X_API_23</code> with whatever you named your AVD.</p>
+
+<pre><code>$ cd sdk/tools/
+$ ./emulator -netdelay none -netspeed full -avd Nexus_5X_API_23 -http-proxy http://192.168.1.134:8181
+</code></pre>
+
+<p>You should see the Google connectivity check in Burp.</p>
+
+<h1 id="ads-please">Ads, Please</h1>
+
+<p>In a separate shell, change to the <code>platform-tools</code> directory in the Android SDK.  We&rsquo;ll use adb to first check that we can interact with our AVD, then install the bitcoin ticker app.</p>
+
+<pre><code>$ cd sdk/platform-tools/
+$ ./adb devices
+List of devices attached
+* daemon not running. starting it now on port 5037 *
+* daemon started successfully *
+emulator-5554 device
+
+$ ./adb install ~/Downloads/Bitcoin\ Ticker\ Widget_1.7.6_apk-dl.com.apk
+9378 KB/s (4898602 bytes in 0.510s)
+  pkg: /data/local/tmp/Bitcoin Ticker Widget_1.7.6_apk-dl.com.apk
+Success
+</code></pre>
+
+<p>We can now see the ticker app listed inside of the AVD app drawer.  Running the app in the AVD shows a new HTTP request in Burp.</p>
+
+<pre><code>GET /api_v3/ads?country=US&amp;device=android&amp;version=136 HTTP/1.1
+User-Agent: Dalvik/2.1.0 (Linux; U; Android 6.0; Android SDK built for x86 Build/MASTER)
+Host: bitcoinstat.org
+Connection: Keep-Alive
+Accept-Encoding: gzip
+</code></pre>
+
+<p>My first idea was to have the app request ads from a non-existant ad server, like <code>127.0.0.1</code>.</p>
+
+<h1 id="switcheroo">Switcheroo</h1>
+
+<p>The apk is a complete package, so we need to take it apart in order to make useful modifications.  I&rsquo;ve renamed the target to <code>Bitcoin-Ticker-Widget-1.7.6.apk</code> here.  Decode the file with <a href="https://ibotpeaches.github.io/Apktool/">apktool</a>.</p>
+
+<pre><code>$ apktool d Bitcoin-Ticker-Widget-1.7.6.apk 
+I: Using Apktool 2.1.1 on Bitcoin-Ticker-Widget-1.7.6.apk
+I: Loading resource table...
+I: Decoding AndroidManifest.xml with resources...
+...
+I: Copying original files...
+</code></pre>
+
+<p>Let&rsquo;s work from the resulting Bitcoin-Ticker-Widget-1.7.6 directory, and find that <code>/api_v3/ads</code> endpoint.</p>
+
+<pre><code>$ cd Bitcoin-Ticker-Widget-1.7.6/
+$ grep -rnsiI 'api_v3/ads' *
+smali/st/brothas/mtgoxwidget/app/loader/AdLoader.smali:404:    const-string v7, &quot;http://bitcoinstat.org/api_v3/ads?country=&quot;
+</code></pre>
+
+<p>Edit the <code>AdLoader.smali</code> file and modify that line.  The new line should look like this:</p>
+
+<pre><code>const-string v7, &quot;http://127.0.0.1/api_v3/ads?country=&quot;
+</code></pre>
+
+<p>The ticker application will now look for the <code>/api_v3/ads</code> endpoint on the device, which of course won&rsquo;t be serving up any ads.  No ads to serve means no ads to display.</p>
+
+<h1 id="wrap-it-up">Wrap it Up</h1>
+
+<p>Let&rsquo;s package up the modified app into a new apk.  We&rsquo;re still in the <code>Bitcoin-Ticker-Widget-1.7.6/</code> directory, but we need to move up to its parent directory.</p>
+
+<pre><code>$ cd ..
+$ apktool b Bitcoin-Ticker-Widget-1.7.6
+I: Using Apktool 2.1.1
+I: Checking whether sources has changed...
+I: Smaling smali folder into classes.dex...
+I: Checking whether resources has changed...
+I: Building resources...
+I: Building apk file...
+I: Copying unknown files/dir...
+</code></pre>
+
+<p>We need to create a keystore and sign the apk to finish up.  The keytool utility comes with java and will create the keystore; you can use any password.</p>
+
+<pre><code>$ cd Bitcoin-Ticker-Widget-1.7.6/
+$ keytool -genkey -v -keystore keys/ticker.keystore -alias Ticker -keyalg RSA -keysize 1024 -sigalg SHA1withRSA -validity 10000
+Enter keystore password:  
+Re-enter new password: 
+</code></pre>
+
+<p>After creating a password for the keystore, the remaining fields (name, organizational unit, etc) can all be left blank.  Last step is to sign the apk using the jarsigner utility, also included with java.  Use the same password with which the keystore was created.</p>
+
+<pre><code>$ jarsigner -sigalg SHA1withRSA -digestalg SHA1 -keystore keys/ticker.keystore dist/Bitcoin-Ticker-Widget-1.7.6.apk Ticker
+Enter Passphrase for keystore: 
+jar signed.
+
+Warning: 
+No -tsa or -tsacert is provided and this jar is not timestamped. Without a timestamp, users may not be able to validate this jar after the signer certificate's expiration date (2044-05-26) or after any future revocation date.
+</code></pre>
+
+<h1 id="victory-lap">Victory Lap</h1>
+
+<p>Time to install the new apk to our device.  Be sure to first enable Developer Options, which at the time of this writing, is done by repeatedly tapping (7x) the Build Number in Settings.  Connecting our Android device prompts us to enable debugging.  We can now see the device attached with adb, and install the patched apk.</p>
+
+<pre><code>$ ./adb devices
+List of devices attached
+00b56a41e56d8d46  device
+
+$ ./adb install Bitcoin-Ticker-Widget-1.7.6.apk
+7883 KB/s (4956293 bytes in 0.613s)
+Success
+</code></pre>
+
+<p>Open the app and forget that you ever saw any ads.</p>
+
+<p><img src="https://cloud.githubusercontent.com/assets/1061032/22529513/5149aef2-e89d-11e6-9685-8b08542af4ab.png" alt="Ads? What ads?!" width="50%" height="50%" /></p>
+	</article>
+</main>
+
+<div id="bottom-nav" class="text-center center-block">
+	<a href=" https://int0x80.github.io/blog/" class="btn btn-default"><i class="fa fa-home"></i> Home</a>
+</div>
+
+
+  <div id="disqus_thread"></div>
+<script type="text/javascript">
+    var disqus_shortname = 'disqus0x80';
+    var disqus_identifier = 'https:\/\/int0x80.github.io\/blog\/post\/easy-android-application-patching\/';
+    var disqus_title = 'Easy Android Application Patching';
+    var disqus_url = 'https:\/\/int0x80.github.io\/blog\/post\/easy-android-application-patching\/';
+
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+  </div>
+  
+  <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.2/js/bootstrap.min.js"></script>
+  
+  
+  <script src="https://int0x80.github.io/blog//js/App.js"></script>
+  
+  <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.9.0/highlight.min.js"></script>
+  
+</body>
+</html>

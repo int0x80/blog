@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Apktool on int0x80</title>
+    <link>https://int0x80.github.io/blog/tags/apktool/index.xml</link>
+    <description>Recent content in Apktool on int0x80</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <atom:link href="https://int0x80.github.io/blog/tags/apktool/index.xml" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Easy Android Application Patching</title>
+      <link>https://int0x80.github.io/blog/post/easy-android-application-patching/</link>
+      <pubDate>Wed, 01 Feb 2017 16:52:38 -0600</pubDate>
+      
+      <guid>https://int0x80.github.io/blog/post/easy-android-application-patching/</guid>
+      <description>&lt;p&gt;Many reasons exist for patching an application: disabling a buggy &amp;lsquo;feature&amp;rsquo;, cheating at a game, etc.  I was recently looking at a bitcoin ticker app, and figured it would be nice to use the app without the ads.  Removing ads is as good a reason as any for patching an application as I don&amp;rsquo;t have an ad blocker in Android.&lt;/p&gt;
+
+&lt;h1 id=&#34;prep-the-patient&#34;&gt;Prep the Patient&lt;/h1&gt;
+
+&lt;p&gt;First things first, we need an apk.  I used &lt;a href=&#34;http://apkfind.com&#34;&gt;APK Find&lt;/a&gt; to acquire the standalone file.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ checksums Bitcoin-Ticker-Widget-1.7.6.apk 
+MD5:      86aa21393d018fecc21d79a3af325d7c  Bitcoin-Ticker-Widget-1.7.6.apk
+SHA-1:    4a7b1a3a8e5d9df0b5659d0848dd3161b17c7394  Bitcoin-Ticker-Widget-1.7.6.apk
+SHA-256:  e18e512c6a67c9081f626744c826a7f8a104e7114653847fb12620e816ecfb66  Bitcoin-Ticker-Widget-1.7.6.apk
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h1 id=&#34;snoop-onto-them&#34;&gt;Snoop onto Them&lt;/h1&gt;
+
+&lt;p&gt;First, create an Android Virtual Device (AVD) to use for testing.  I grabbed &lt;a href=&#34;https://developer.android.com/studio/index.html&#34;&gt;Android Studio&lt;/a&gt;, and followed the &lt;a href=&#34;https://developer.android.com/studio/run/managing-avds.html&#34;&gt;step-by-step instructions&lt;/a&gt;.  My AVD is a Nexus 5x using API 23.&lt;/p&gt;
+
+&lt;p&gt;Next, let&amp;rsquo;s configure a proxy to listen on all interfaces.  I&amp;rsquo;m using Burp on port 8181.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://cloud.githubusercontent.com/assets/1061032/22529218/3fdb1d5a-e89c-11e6-884a-2b49d4ef6e4e.png&#34; alt=&#34;Burp listening on 8181&#34; width=&#34;50%&#34; height=&#34;50%&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Now we need to configure the AVD to use our proxy.  Dig through the following menus in your Android Virtual Device to reach the config screen.&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Settings&lt;/li&gt;
+&lt;li&gt;Wireless &amp;amp; networks&lt;/li&gt;
+&lt;li&gt;Cellular networks&lt;/li&gt;
+&lt;li&gt;Access Point Names&lt;/li&gt;
+&lt;li&gt;T-Mobile (or whatever provider is shown here)&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Set the following values:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;Proxy:&lt;/strong&gt; &lt;code&gt;10.0.2.2&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Port:&lt;/strong&gt; &lt;code&gt;8181&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Now power off the device.&lt;/p&gt;
+
+&lt;p&gt;Grab the IP address for your internet-connected network interface; mine was &lt;code&gt;192.168.1.134&lt;/code&gt;.  Now let&amp;rsquo;s launch the emulator from the &lt;code&gt;tools&lt;/code&gt; directory.  Replace &lt;code&gt;Nexus_5X_API_23&lt;/code&gt; with whatever you named your AVD.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ cd sdk/tools/
+$ ./emulator -netdelay none -netspeed full -avd Nexus_5X_API_23 -http-proxy http://192.168.1.134:8181
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;You should see the Google connectivity check in Burp.&lt;/p&gt;
+
+&lt;h1 id=&#34;ads-please&#34;&gt;Ads, Please&lt;/h1&gt;
+
+&lt;p&gt;In a separate shell, change to the &lt;code&gt;platform-tools&lt;/code&gt; directory in the Android SDK.  We&amp;rsquo;ll use adb to first check that we can interact with our AVD, then install the bitcoin ticker app.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ cd sdk/platform-tools/
+$ ./adb devices
+List of devices attached
+* daemon not running. starting it now on port 5037 *
+* daemon started successfully *
+emulator-5554 device
+
+$ ./adb install ~/Downloads/Bitcoin\ Ticker\ Widget_1.7.6_apk-dl.com.apk
+9378 KB/s (4898602 bytes in 0.510s)
+  pkg: /data/local/tmp/Bitcoin Ticker Widget_1.7.6_apk-dl.com.apk
+Success
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;We can now see the ticker app listed inside of the AVD app drawer.  Running the app in the AVD shows a new HTTP request in Burp.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;GET /api_v3/ads?country=US&amp;amp;device=android&amp;amp;version=136 HTTP/1.1
+User-Agent: Dalvik/2.1.0 (Linux; U; Android 6.0; Android SDK built for x86 Build/MASTER)
+Host: bitcoinstat.org
+Connection: Keep-Alive
+Accept-Encoding: gzip
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;My first idea was to have the app request ads from a non-existant ad server, like &lt;code&gt;127.0.0.1&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h1 id=&#34;switcheroo&#34;&gt;Switcheroo&lt;/h1&gt;
+
+&lt;p&gt;The apk is a complete package, so we need to take it apart in order to make useful modifications.  I&amp;rsquo;ve renamed the target to &lt;code&gt;Bitcoin-Ticker-Widget-1.7.6.apk&lt;/code&gt; here.  Decode the file with &lt;a href=&#34;https://ibotpeaches.github.io/Apktool/&#34;&gt;apktool&lt;/a&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ apktool d Bitcoin-Ticker-Widget-1.7.6.apk 
+I: Using Apktool 2.1.1 on Bitcoin-Ticker-Widget-1.7.6.apk
+I: Loading resource table...
+I: Decoding AndroidManifest.xml with resources...
+...
+I: Copying original files...
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Let&amp;rsquo;s work from the resulting Bitcoin-Ticker-Widget-1.7.6 directory, and find that &lt;code&gt;/api_v3/ads&lt;/code&gt; endpoint.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ cd Bitcoin-Ticker-Widget-1.7.6/
+$ grep -rnsiI &#39;api_v3/ads&#39; *
+smali/st/brothas/mtgoxwidget/app/loader/AdLoader.smali:404:    const-string v7, &amp;quot;http://bitcoinstat.org/api_v3/ads?country=&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Edit the &lt;code&gt;AdLoader.smali&lt;/code&gt; file and modify that line.  The new line should look like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;const-string v7, &amp;quot;http://127.0.0.1/api_v3/ads?country=&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The ticker application will now look for the &lt;code&gt;/api_v3/ads&lt;/code&gt; endpoint on the device, which of course won&amp;rsquo;t be serving up any ads.  No ads to serve means no ads to display.&lt;/p&gt;
+
+&lt;h1 id=&#34;wrap-it-up&#34;&gt;Wrap it Up&lt;/h1&gt;
+
+&lt;p&gt;Let&amp;rsquo;s package up the modified app into a new apk.  We&amp;rsquo;re still in the &lt;code&gt;Bitcoin-Ticker-Widget-1.7.6/&lt;/code&gt; directory, but we need to move up to its parent directory.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ cd ..
+$ apktool b Bitcoin-Ticker-Widget-1.7.6
+I: Using Apktool 2.1.1
+I: Checking whether sources has changed...
+I: Smaling smali folder into classes.dex...
+I: Checking whether resources has changed...
+I: Building resources...
+I: Building apk file...
+I: Copying unknown files/dir...
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;We need to create a keystore and sign the apk to finish up.  The keytool utility comes with java and will create the keystore; you can use any password.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ cd Bitcoin-Ticker-Widget-1.7.6/
+$ keytool -genkey -v -keystore keys/ticker.keystore -alias Ticker -keyalg RSA -keysize 1024 -sigalg SHA1withRSA -validity 10000
+Enter keystore password:  
+Re-enter new password: 
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;After creating a password for the keystore, the remaining fields (name, organizational unit, etc) can all be left blank.  Last step is to sign the apk using the jarsigner utility, also included with java.  Use the same password with which the keystore was created.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ jarsigner -sigalg SHA1withRSA -digestalg SHA1 -keystore keys/ticker.keystore dist/Bitcoin-Ticker-Widget-1.7.6.apk Ticker
+Enter Passphrase for keystore: 
+jar signed.
+
+Warning: 
+No -tsa or -tsacert is provided and this jar is not timestamped. Without a timestamp, users may not be able to validate this jar after the signer certificate&#39;s expiration date (2044-05-26) or after any future revocation date.
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h1 id=&#34;victory-lap&#34;&gt;Victory Lap&lt;/h1&gt;
+
+&lt;p&gt;Time to install the new apk to our device.  Be sure to first enable Developer Options, which at the time of this writing, is done by repeatedly tapping (7x) the Build Number in Settings.  Connecting our Android device prompts us to enable debugging.  We can now see the device attached with adb, and install the patched apk.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ ./adb devices
+List of devices attached
+00b56a41e56d8d46  device
+
+$ ./adb install Bitcoin-Ticker-Widget-1.7.6.apk
+7883 KB/s (4956293 bytes in 0.613s)
+Success
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Open the app and forget that you ever saw any ads.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://cloud.githubusercontent.com/assets/1061032/22529513/5149aef2-e89d-11e6-9685-8b08542af4ab.png&#34; alt=&#34;Ads? What ads?!&#34; width=&#34;50%&#34; height=&#34;50%&#34; /&gt;&lt;/p&gt;</description>
+    </item>
+    
+  </channel>
+</rss>
