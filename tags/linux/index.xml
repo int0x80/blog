@@ -9,6 +9,113 @@
     <atom:link href="https://int0x80.github.io/blog/tags/linux/index.xml" rel="self" type="application/rss+xml" />
     
     <item>
+      <title>Metasploit VPS Setup</title>
+      <link>https://int0x80.github.io/blog/post/metasploit-vps-setup/</link>
+      <pubDate>Mon, 06 Feb 2017 17:49:08 -0600</pubDate>
+      
+      <guid>https://int0x80.github.io/blog/post/metasploit-vps-setup/</guid>
+      <description>&lt;p&gt;One of my favorite exercises for carefree hacking is CTF.  Learn new tricks, play with new tools, and have fun all without the concerns encountered at a paying gig.  No IDS, no AV, no real constraints &amp;ndash; just solve the challenges.&lt;/p&gt;
+
+&lt;p&gt;Metasploit is such a handy framework, especially in scenario-based or attack/defense CTF.  I love to play VMs from VulnHub, but those live on a host-only network.  What about when my target is outside of my own network?  There are two primary options:  add a NAT to catch shells on your home network, or use a VPS.  We&amp;rsquo;ll cover the latter in this post.&lt;/p&gt;
+
+&lt;h1 id=&#34;virtual-private-server&#34;&gt;Virtual Private Server&lt;/h1&gt;
+
+&lt;p&gt;VPS is a Virtual Private Server; it&amp;rsquo;s like having your own computer out on the internet.  This particular VPS is running Debian unstable and has 2 vCPU, 1GB RAM, and 20GB of storage; but I&amp;rsquo;ve run metasploit on systems with half those specs.  There are many VPS providers so take a look around to select one for youself.&lt;/p&gt;
+
+&lt;h1 id=&#34;dependencies&#34;&gt;Dependencies&lt;/h1&gt;
+
+&lt;p&gt;The first step is to prep the system with the tools needed by metasploit.  Some of this is adapted from &lt;a href=&#34;http://www.darkoperator.com/installing-metasploit-in-ubunt/&#34;&gt;Carlos Perez&lt;/a&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ sudo apt update
+$ sudo apt install -y autoconf build-essential curl curl git-core libpcap-dev libpq-dev libpq5 libreadline-dev libreadline5 libsqlite3-dev libssl1.0-dev libxml2-dev libxslt1-dev libyaml-dev nmap pgadmin3 postgresql zlib1g-dev zlib1g-dev
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Let&amp;rsquo;s also grab the metasploit source while we&amp;rsquo;re at it and set up the filesystem permissions.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ sudo git clone https://github.com/rapid7/metasploit-framework.git /opt/metasploit-framework
+$ sudo chown -R $USER /opt/metasploit-framework
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;ruby-and-rvm&#34;&gt;Ruby and RVM&lt;/h2&gt;
+
+&lt;p&gt;Begin the Ruby install using RVM.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ curl -sSL https://rvm.io/mpapis.asc | gpg --import -
+$ curl -L https://get.rvm.io | bash -s stable
+$ echo &amp;quot;source ~/.rvm/scripts/rvm&amp;quot; | tee -a $HOME/.bashrc
+$ source $HOME/.bashrc
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The metasploit repository includes a file named &lt;code&gt;.ruby-version&lt;/code&gt; which indicates the proper version of Ruby to use.  Unfortunately, the OpenSSL headers in Debian unstable currently cause a problem with the Ruby install.  Fortunately we can work around this problem having installed &lt;code&gt;libssl1.0-dev&lt;/code&gt; in the initial setup rather than the common &lt;code&gt;libssl-dev&lt;/code&gt;.  If you have &lt;code&gt;libssl-dev&lt;/code&gt; in place of &lt;code&gt;libssl1.0-dev&lt;/code&gt;, a simple &lt;code&gt;apt install&lt;/code&gt; will fix the situation.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ rubyv=$(cat /opt/metasploit-framework/.ruby-version)
+$ rvm install $rubyv --autolibs=0
+$ rvm use $rubyv --default
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h1 id=&#34;metasploit-postgresql&#34;&gt;Metasploit + PostgreSQL&lt;/h1&gt;
+
+&lt;p&gt;I have always enjoyed the &lt;code&gt;workspace&lt;/code&gt; feature of metasploit and having details stored in a database for future reference.  Let&amp;rsquo;s stand up a quick postgres database for metasploit to use.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ sudo su - postgres
+$ createuser msfuser -P -S -R -D
+$ createdb -O msfuser msfdb
+$ exit
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Here is my &lt;code&gt;database.yml&lt;/code&gt; configuration file located in the &lt;code&gt;config&lt;/code&gt; directory.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;# /opt/metasploit-framework/config/database.yml
+
+development: &amp;amp;pgsql
+  adapter: postgresql
+  database: msfdb
+  username: msfuser
+  password: n9y25ah7  # lol
+  host: localhost
+  port: 5432
+  pool: 200
+  timeout: 5
+
+# You will often want to seperate your databases between dev
+# mode and prod mode. Absent a production db, though, defaulting
+# to dev is pretty sensible for many developer-users.
+production: &amp;amp;production
+  &amp;lt;&amp;lt;: *pgsql
+
+# Warning: The database defined as &amp;quot;test&amp;quot; will be erased and
+# re-generated from your development database when you run &amp;quot;rake&amp;quot;.
+# Do not set this db to the same as development or production.
+#
+# Note also, sqlite3 is totally unsupported by Metasploit now.
+test:
+  &amp;lt;&amp;lt;: *pgsql
+  database: metasploit_framework_test
+  username: metasploit_framework_test
+  password: ___________________________
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now let&amp;rsquo;s get to the metasploit setup.  Fortunately gems and bundler make it pretty easy.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ cd /opt/metasploit-framework 
+$ rvm --default use ruby-${rubyv}@metasploit-framework
+$ gem install bundler
+$ bundle install
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Situate the metasploit utilities with symbolic links on the filesystem and we&amp;rsquo;ll be ready to roll.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ for util in msf*; do sudo ln -s /opt/metasploit-framework/$util /usr/local/bin/$util; done
+$ msfconsole
+...
+msf &amp;gt; db_status
+[*] postgresql connected to msfdb
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Pretty painless and great for catching shells.&lt;/p&gt;</description>
+    </item>
+    
+    <item>
       <title>Home Lab: ESXi</title>
       <link>https://int0x80.github.io/blog/post/home-lab-esxi/</link>
       <pubDate>Wed, 25 Jan 2017 10:47:27 -0600</pubDate>
